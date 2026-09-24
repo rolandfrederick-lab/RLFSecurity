@@ -42,14 +42,24 @@ Owners edit the website's photos, prices and contact details from the app (More,
 Serve the `public/` folder, for example `python3 -m http.server -d public`, and open
 http://localhost:8000. (The 3D scene needs a web server; it doesn't load when the file is opened directly.) No build step is needed.
 
-## Contact form
+## Contact form and Inbox
 
-The form posts to `/api/contact`, handled by the Worker in `src/worker.js`, which emails
-the request from website@rlfsecurity.com to the owner through Cloudflare Email Routing
-(`send_email` binding in `wrangler.jsonc`). The destination must be a verified address in
-Email Routing; to change it, update both `destination_address` and `CONTACT_EMAIL_TO` in
-`wrangler.jsonc`. A hidden field filters out bots. The form never opens the visitor's email
-app; if sending fails, it asks them to try again or call.
+The form posts to `/api/contact`, handled by the Worker in `src/worker.js`. It emails the
+request from website@rlfsecurity.com to the owner through Cloudflare Email Routing
+(`send_email` binding in `wrangler.jsonc`) and saves it to the `messages` table, which the
+staff app shows under the **Inbox** tab (owners and managers). A hidden field filters out
+bots; the form never opens the visitor's email app.
+
+Replies written in the Inbox go through `/api/reply`: the Worker checks the Supabase
+sign-in (owner or manager only), builds the branded reply (the sender's name and title,
+the phone numbers from the Website settings, and the original request quoted), sends it
+through **Resend** from rolandfrederick@rlfsecurity.com with a blind copy to that address,
+and records it in `message_replies`.
+
+One-time Resend setup: create an account at resend.com, add the domain `rlfsecurity.com`
+and let it add its DNS records in Cloudflare, create an API key with sending access, and
+add it in Cloudflare (Workers & Pages, rlfsecurity, Settings, Variables and Secrets) as a
+**secret** named `RESEND_API_KEY`. Until then the Inbox can preview replies but not send.
 
 ## Content still to fill in
 

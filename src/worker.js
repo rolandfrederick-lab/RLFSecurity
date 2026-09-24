@@ -1,7 +1,10 @@
 // Cloudflare Worker for rlfsecurity.com.
 // Static files in public/ are served directly by Cloudflare; this script only
-// sees requests that don't match a file. It handles the contact form
-// (POST /api/contact) by emailing the request to the owner through Email Routing.
+// sees requests that don't match a file:
+//   POST /api/contact  website contact form: emails the request to the owner through
+//                      Email Routing and saves it to the staff app's Inbox (Supabase).
+//   POST /api/reply    staff app Inbox: previews or sends a branded reply to a request
+//                      through Resend, from the business address. Owners and managers only.
 
 import { EmailMessage } from 'cloudflare:email';
 
@@ -25,6 +28,21 @@ const encodeWord = s => `=?UTF-8?B?${b64(s)}?=`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const wrap76 = s => s.replace(/.{76}/g, '$&\r\n');
 
+// Shared black-and-gold frame for every email the site sends.
+const emailTop = title => `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title></head>
+<body style="margin:0;padding:0;background:#f4f1ea">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea"><tr><td align="center" style="padding:24px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e0d0">
+    <tr><td style="background:#0b0b0c;border-bottom:3px solid #c9a227;padding:22px 28px">
+      <span style="font:700 20px Georgia,'Times New Roman',serif;letter-spacing:.12em;color:#c9a227">&#9733;</span>
+      <span style="font:700 17px Georgia,'Times New Roman',serif;letter-spacing:.1em;color:#f2efe6">&nbsp;R L FREDERICK</span>
+      <div style="font:12px Arial,sans-serif;letter-spacing:.14em;color:#b8b3a6;margin-top:4px">PRIVATE SECURITY &amp; WEAPON SAFETY</div>
+    </td></tr>`;
+const emailBottom = note => `    <tr><td style="background:#0b0b0c;padding:14px 28px;font:12px Arial,sans-serif;color:#b8b3a6">${note}</td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+
 // Branded HTML version of the request. Tables and inline styles, because email apps
 // (Gmail, Outlook, Apple Mail) ignore most page-style CSS.
 function requestHtml({ name, email, org, phone, need, message }) {
@@ -33,15 +51,7 @@ function requestHtml({ name, email, org, phone, need, message }) {
       <td style="padding:10px 0;border-bottom:1px solid #e6e0d0;vertical-align:top;font:16px Arial,sans-serif;color:#141413">${value}</td></tr>`;
   const tel = phone.replace(/[^\d+]/g, '');
   const button = (href, label, dark) => `<a href="${href}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 22px;border-radius:4px;font:700 15px Arial,sans-serif;text-decoration:none;${dark ? 'background:#0b0b0c;color:#f2efe6' : 'background:#c9a227;color:#0b0b0c'}">${label}</a>`;
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Website request</title></head>
-<body style="margin:0;padding:0;background:#f4f1ea">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea"><tr><td align="center" style="padding:24px 12px">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e0d0">
-    <tr><td style="background:#0b0b0c;border-bottom:3px solid #c9a227;padding:22px 28px">
-      <span style="font:700 20px Georgia,'Times New Roman',serif;letter-spacing:.12em;color:#c9a227">&#9733;</span>
-      <span style="font:700 17px Georgia,'Times New Roman',serif;letter-spacing:.1em;color:#f2efe6">&nbsp;R L FREDERICK</span>
-      <div style="font:12px Arial,sans-serif;letter-spacing:.14em;color:#b8b3a6;margin-top:4px">PRIVATE SECURITY &amp; WEAPON SAFETY</div>
-    </td></tr>
+  return `${emailTop('Website request')}
     <tr><td style="padding:28px 28px 8px">
       <div style="font:600 12px Arial,sans-serif;letter-spacing:.18em;color:#8a6d12">NEW WEBSITE REQUEST</div>
       <h1 style="margin:6px 0 4px;font:700 26px Georgia,'Times New Roman',serif;color:#141413">${esc(name)}</h1>
@@ -62,10 +72,7 @@ function requestHtml({ name, email, org, phone, need, message }) {
       ${button(`mailto:${esc(email)}?subject=${encodeURIComponent('Re: your request to R L Frederick Private Security')}`, `Reply to ${esc(name.split(' ')[0] || name)}`)}${phone ? button(`tel:${esc(tel)}`, 'Call', true) : ''}
       <div style="font:13px Arial,sans-serif;color:#5f5b52;margin-top:6px">Or just press Reply in your email app. It goes straight to ${esc(name)}.</div>
     </td></tr>
-    <tr><td style="background:#0b0b0c;padding:14px 28px;font:12px Arial,sans-serif;color:#b8b3a6">Sent from the contact form at <a href="https://rlfsecurity.com" style="color:#c9a227">rlfsecurity.com</a></td></tr>
-  </table>
-</td></tr></table>
-</body></html>`;
+${emailBottom('Sent from the contact form at <a href="https://rlfsecurity.com" style="color:#c9a227">rlfsecurity.com</a>')}`;
 }
 
 async function handleContact(request, env) {
@@ -128,21 +135,134 @@ async function handleContact(request, env) {
     ``
   ].join('\r\n');
 
-  try {
-    await env.CONTACT_EMAIL.send(new EmailMessage(FROM, to, raw));
-  } catch (e) {
-    console.error('contact form send failed', e);
-    return json({ error: 'The message could not be sent.' }, 502);
+  // Email the owner and save to the Inbox. Either one is enough for the visitor.
+  const [sent, saved] = await Promise.allSettled([
+    env.CONTACT_EMAIL.send(new EmailMessage(FROM, to, raw)),
+    saveRequest(env, { name, email, phone, organization: org, need, message })
+  ]);
+  if (sent.status === 'rejected') console.error('contact form email failed', sent.reason);
+  if (saved.status === 'rejected') console.error('contact form save failed', saved.reason);
+  if (sent.status === 'rejected' && saved.status === 'rejected') return json({ error: 'The message could not be sent.' }, 502);
+  return json({ ok: true });
+}
+
+/* ---------------- Supabase (the staff app's database) ---------------- */
+
+const sbHeaders = (env, auth) => ({ apikey: env.SUPABASE_KEY, 'content-type': 'application/json', ...(auth ? { authorization: auth } : {}) });
+
+async function saveRequest(env, row) {
+  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/messages`, { method: 'POST', headers: { ...sbHeaders(env), prefer: 'return=minimal' }, body: JSON.stringify(row) });
+  if (!r.ok) throw new Error(`Inbox save failed (${r.status}): ${await r.text()}`);
+}
+
+// The signed-in staff member making this request, if they are an owner or manager.
+async function staffFrom(request, env) {
+  const auth = request.headers.get('authorization') || '';
+  if (!/^Bearer \S+$/.test(auth)) return null;
+  const u = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, { headers: sbHeaders(env, auth) });
+  if (!u.ok) return null;
+  const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/app_role`, { method: 'POST', headers: sbHeaders(env, auth), body: '{}' });
+  const role = r.ok ? await r.json() : null;
+  return role === 'owner' || role === 'manager' ? { auth, user: await u.json() } : null;
+}
+
+/* ---------------- Replies from the staff app ---------------- */
+
+const niceDate = iso => new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'America/Detroit' });
+// Blank lines start a new paragraph; single line breaks stay as line breaks.
+const paragraphs = text => text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
+  .map(p => `<p style="margin:0 0 16px;font:16px/1.6 Arial,sans-serif;color:#141413">${esc(p).replace(/\n/g, '<br>')}</p>`).join('');
+
+function replyContent({ msg, body, senderName, senderTitle, site, from }) {
+  const phones = [site.phone || '313-693-5829', site.phoneOffice].filter(Boolean);
+  const phoneLabels = site.phoneOffice ? ['Direct', 'Office'] : ['Phone'];
+  const telLink = p => `<a href="tel:${esc(p.replace(/[^\d+]/g, ''))}" style="color:#8a6d12;text-decoration:none">${esc(p)}</a>`;
+  const html = `${emailTop('Reply from R L Frederick Private Security')}
+    <tr><td style="padding:30px 28px 6px">
+      ${paragraphs(body)}
+    </td></tr>
+    <tr><td style="padding:0 28px 26px">
+      <table role="presentation" cellpadding="0" cellspacing="0" style="border-top:2px solid #c9a227;padding-top:14px"><tr><td style="padding-top:14px">
+        <div style="font:700 18px Georgia,'Times New Roman',serif;color:#141413">${esc(senderName)}</div>
+        ${senderTitle ? `<div style="font:14px Arial,sans-serif;color:#5f5b52;margin-top:2px">${esc(senderTitle)}</div>` : ''}
+        <div style="font:600 13px Arial,sans-serif;letter-spacing:.06em;color:#8a6d12;margin-top:8px">R L FREDERICK PRIVATE SECURITY &amp; WEAPON SAFETY</div>
+        <div style="font:14px/1.7 Arial,sans-serif;color:#141413;margin-top:6px">
+          ${phones.map((p, i) => `${phoneLabels[i]}: ${telLink(p)}`).join('<br>')}<br>
+          <a href="mailto:${esc(from)}" style="color:#8a6d12;text-decoration:none">${esc(from)}</a> &middot; <a href="https://rlfsecurity.com" style="color:#8a6d12;text-decoration:none">rlfsecurity.com</a>
+        </div>
+      </td></tr></table>
+    </td></tr>
+    <tr><td style="padding:0 28px 28px">
+      <div style="font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a958a;margin-bottom:8px">Your request on ${esc(niceDate(msg.created_at))}${msg.need ? ` &middot; ${esc(msg.need)}` : ''}</div>
+      <div style="background:#faf8f2;border-left:3px solid #d9d4c7;padding:12px 16px;font:14px/1.55 Arial,sans-serif;color:#5f5b52;white-space:pre-wrap">${esc(msg.message)}</div>
+    </td></tr>
+${emailBottom('R L Frederick Private Security &amp; Weapon Safety &middot; Detroit, Michigan &middot; <a href="https://rlfsecurity.com" style="color:#c9a227">rlfsecurity.com</a>')}`;
+  const text = [
+    body.trim(), '', '--', senderName, senderTitle, 'R L Frederick Private Security & Weapon Safety',
+    ...phones.map((p, i) => `${phoneLabels[i]}: ${p}`), from, 'rlfsecurity.com', '',
+    `Your request on ${niceDate(msg.created_at)}${msg.need ? ` (${msg.need})` : ''}:`,
+    ...msg.message.split('\n').map(l => `> ${l}`)
+  ].filter(l => l !== undefined && l !== null).join('\n');
+  return { html, text };
+}
+
+async function handleReply(request, env) {
+  const staff = await staffFrom(request, env);
+  if (!staff) return json({ error: 'Please sign in again. Only owners and managers can send replies.' }, 401);
+  let f;
+  try { f = await request.json(); } catch { return json({ error: 'Bad request.' }, 400); }
+
+  const id = clean(f.messageId, 60);
+  const subject = oneLine(clean(f.subject, 200));
+  const body = clean(f.body, 20000);
+  const senderName = oneLine(clean(f.senderName, 80)).replace(/[<>"]/g, '');
+  const senderTitle = oneLine(clean(f.senderTitle, 80));
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'That request could not be found.' }, 400);
+  if (!subject || !body || !senderName) return json({ error: 'Add a subject, a message and your name.' }, 400);
+
+  const [m, w] = await Promise.all([
+    fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}&select=*`, { headers: sbHeaders(env, staff.auth) }),
+    fetch(`${env.SUPABASE_URL}/rest/v1/website?select=data&id=eq.1`, { headers: sbHeaders(env) })
+  ]);
+  const msg = m.ok ? (await m.json())[0] : null;
+  if (!msg) return json({ error: 'That request could not be found.' }, 404);
+  const site = (w.ok ? ((await w.json())[0] || {}).data : null) || {};
+
+  const from = env.REPLY_FROM;
+  const { html, text } = replyContent({ msg, body, senderName, senderTitle, site, from });
+  if (!f.send) return json({ ok: true, preview: html, to: msg.email });
+
+  if (!env.RESEND_API_KEY) return json({ error: 'Sending replies is not switched on yet. The Resend key still needs to be added in Cloudflare.' }, 503);
+  const r = await fetch(env.RESEND_API_URL || 'https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: `${senderName} · R L Frederick Private Security <${from}>`, to: [msg.email], bcc: [from], reply_to: from, subject, html, text })
+  });
+  if (!r.ok) {
+    const detail = await r.text();
+    console.error('reply send failed', r.status, detail);
+    return json({ error: `The reply could not be sent. ${(() => { try { return JSON.parse(detail).message || ''; } catch { return ''; } })()}`.trim() }, 502);
   }
+
+  // Keep a copy in the Inbox and mark the request answered.
+  const now = new Date().toISOString();
+  await Promise.allSettled([
+    fetch(`${env.SUPABASE_URL}/rest/v1/message_replies`, { method: 'POST', headers: { ...sbHeaders(env, staff.auth), prefer: 'return=minimal' },
+      body: JSON.stringify({ message_id: id, subject, body, sender_name: senderName, sent_by: staff.user.id }) }),
+    fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}`, { method: 'PATCH', headers: { ...sbHeaders(env, staff.auth), prefer: 'return=minimal' },
+      body: JSON.stringify({ status: 'replied', read_at: msg.read_at || now }) })
+  ]);
   return json({ ok: true });
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname === '/api/contact') {
+    const routes = { '/api/contact': handleContact, '/api/reply': handleReply };
+    const handler = routes[url.pathname];
+    if (handler) {
       if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
-      return handleContact(request, env);
+      return handler(request, env);
     }
     return env.ASSETS.fetch(request);
   }

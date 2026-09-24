@@ -6,10 +6,11 @@ const ICONS = {
   mypay: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>', taxes: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
   more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
   timeoff: '<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4M12 13v5M9.5 15.5h5"/>',
-  invoices: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/>'
+  invoices: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h6M9 16h6"/>',
+  inbox: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
 };
 function tabsFor() {
-  if (isMgr()) return [["team", "Timesheets"], ["run", "Pay"], ["history", "Paychecks"], ["taxes", "Taxes"], ["more", "More"]];
+  if (isMgr()) return [["team", "Timesheets"], ["run", "Pay"], ["history", "Paychecks"], ["taxes", "Taxes"], ["inbox", S.inboxNew ? `Inbox <span class="badge">${S.inboxNew}</span>` : "Inbox"], ["more", "More"]];
   if (isSup()) return [["clock", "Clock"], ["hours", "My hours"], ["timeoff", "Time off"], ["team", "Team"], ["more", "More"]];
   if (isContractor()) return [["invoices", "Invoices"], ["mypay", "My pay"], ["more", "More"]];
   return [["clock", "Clock"], ["hours", "My hours"], ["timeoff", "Time off"], ["mypay", "My pay"], ["more", "More"]];
@@ -35,7 +36,8 @@ function render() {
   nav.innerHTML = tabs.map(t => `<button data-tab="${t[0]}" aria-current="${t[0] === cur ? "page" : "false"}"><svg viewBox="0 0 24 24">${ICONS[t[0]]}</svg>${t[1]}</button>`).join("");
   document.querySelectorAll("#app main > section").forEach(x => x.hidden = x.id !== "v-" + S.tab);
   ({ clock: renderClock, hours: renderHours, timeoff: renderTimeoff, mypay: renderMyPay, team: renderTeam, run: renderRun, history: renderHistory, taxes: renderTaxes,
-     more: renderMore, workers: renderWorkers, sites: renderSites, people: renderPeople, settings: renderSettings, schedule: renderSchedule, filings: renderFilings, books: renderBooks, guide: renderGuide, invoices: renderInvoices, website: renderWebsite })[S.tab]();
+     more: renderMore, workers: renderWorkers, sites: renderSites, people: renderPeople, settings: renderSettings, schedule: renderSchedule, filings: renderFilings, books: renderBooks, guide: renderGuide, invoices: renderInvoices, website: renderWebsite, inbox: renderInbox })[S.tab]();
+  refreshInboxCount();
 }
 function go(tab) { S.tab = tab; window.scrollTo(0, 0); render(); softRefresh(); }
 /* Reload data in the background without disturbing what the user is doing. Also checks for a new app version. */
