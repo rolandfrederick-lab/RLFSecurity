@@ -58,6 +58,11 @@ app password, from rolandfrederick@rlfsecurity.com (a "Send mail as" address on 
 Gmail account). Gmail keeps a copy in its Sent folder, and the reply is recorded in
 `message_replies`.
 
+The Inbox tab has four folders: Inbox (open requests), Sent (replies and new emails),
+Archived and Trash. **Compose** writes a new email to any address in the same design,
+without a quoted request. Trash, restore, delete forever and Empty trash act only on the
+app's records; Gmail is not changed.
+
 One-time setup: in Cloudflare, Workers & Pages, rlfsecurity, Settings, Variables and
 Secrets, add a **secret** named `GMAIL_APP_PASSWORD` holding the Gmail app password
 (from myaccount.google.com/apppasswords). Never put it in the code. Until it is added,

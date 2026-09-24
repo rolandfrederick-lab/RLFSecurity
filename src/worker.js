@@ -3,7 +3,7 @@
 // sees requests that don't match a file:
 //   POST /api/contact  website contact form: emails the request to the owner through
 //                      Email Routing and saves it to the staff app's Inbox (Supabase).
-//   POST /api/reply    staff app Inbox: previews or sends a branded reply to a request
+//   POST /api/reply    staff app Inbox: previews or sends a branded reply to a request, or a new email,
 //                      through Gmail (app password), from the business address.
 //                      Owners and managers only.
 
@@ -194,16 +194,15 @@ function replyContent({ msg, body, senderName, senderTitle, site, from }) {
         </div>
       </td></tr></table>
     </td></tr>
-    <tr><td style="padding:0 28px 28px">
+    ${msg ? `<tr><td style="padding:0 28px 28px">
       <div style="font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#9a958a;margin-bottom:8px">Your request on ${esc(niceDate(msg.created_at))}${msg.need ? ` &middot; ${esc(msg.need)}` : ''}</div>
       <div style="background:#faf8f2;border-left:3px solid #d9d4c7;padding:12px 16px;font:14px/1.55 Arial,sans-serif;color:#5f5b52;white-space:pre-wrap">${esc(msg.message)}</div>
-    </td></tr>
+    </td></tr>` : ''}
 ${emailBottom('R L Frederick Private Security &amp; Weapon Safety &middot; Detroit, Michigan &middot; <a href="https://rlfsecurity.com" style="color:#c9a227">rlfsecurity.com</a>')}`;
   const text = [
     body.trim(), '', '--', senderName, senderTitle, 'R L Frederick Private Security & Weapon Safety',
-    ...phones.map((p, i) => `${phoneLabels[i]}: ${p}`), from, 'rlfsecurity.com', '',
-    `Your request on ${niceDate(msg.created_at)}${msg.need ? ` (${msg.need})` : ''}:`,
-    ...msg.message.split('\n').map(l => `> ${l}`)
+    ...phones.map((p, i) => `${phoneLabels[i]}: ${p}`), from, 'rlfsecurity.com',
+    ...(msg ? ['', `Your request on ${niceDate(msg.created_at)}${msg.need ? ` (${msg.need})` : ''}:`, ...msg.message.split('\n').map(l => `> ${l}`)] : [])
   ].filter(l => l !== undefined && l !== null).join('\n');
   return { html, text };
 }
@@ -285,43 +284,48 @@ async function handleReply(request, env) {
   let f;
   try { f = await request.json(); } catch { return json({ error: 'Bad request.' }, 400); }
 
+  // A reply names the request (messageId); a new email names the recipient (to, toName).
   const id = clean(f.messageId, 60);
   const subject = oneLine(clean(f.subject, 200));
   const body = clean(f.body, 20000);
   const senderName = oneLine(clean(f.senderName, 80)).replace(/[<>"]/g, '');
   const senderTitle = oneLine(clean(f.senderTitle, 80));
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'That request could not be found.' }, 400);
+  if (id && !/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'That request could not be found.' }, 400);
   if (!subject || !body || !senderName) return json({ error: 'Add a subject, a message and your name.' }, 400);
 
-  const [m, w] = await Promise.all([
-    fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}&select=*`, { headers: sbHeaders(env, staff.auth) }),
-    fetch(`${env.SUPABASE_URL}/rest/v1/website?select=data&id=eq.1`, { headers: sbHeaders(env) })
-  ]);
-  const msg = m.ok ? (await m.json())[0] : null;
-  if (!msg) return json({ error: 'That request could not be found.' }, 404);
+  const w = await fetch(`${env.SUPABASE_URL}/rest/v1/website?select=data&id=eq.1`, { headers: sbHeaders(env) });
   const site = (w.ok ? ((await w.json())[0] || {}).data : null) || {};
+  let msg = null, toEmail, toName;
+  if (id) {
+    const m = await fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}&select=*`, { headers: sbHeaders(env, staff.auth) });
+    msg = m.ok ? (await m.json())[0] : null;
+    if (!msg) return json({ error: 'That request could not be found.' }, 404);
+    toEmail = msg.email; toName = msg.name;
+  } else {
+    toEmail = oneLine(clean(f.to, 200)); toName = oneLine(clean(f.toName, 120));
+    if (!/^[^\s@<>,;]+@[^\s@<>,;]+\.[^\s@<>,;]+$/.test(toEmail)) return json({ error: 'Check the email address you are sending to.' }, 400);
+  }
 
   const from = env.REPLY_FROM;
   const { html, text } = replyContent({ msg, body, senderName, senderTitle, site, from });
-  if (!f.send) return json({ ok: true, preview: html, to: msg.email });
+  if (!f.send) return json({ ok: true, preview: html, to: toEmail });
 
   if (!env.GMAIL_APP_PASSWORD) return json({ error: 'Sending replies is not switched on yet. The Gmail app password still needs to be added in Cloudflare.' }, 503);
-  const raw = mimeMessage({ from: `${senderName} · R L Frederick Private Security`, fromAddress: from, to: msg.email, replyTo: from, subject, text, html });
+  const raw = mimeMessage({ from: `${senderName} · R L Frederick Private Security`, fromAddress: from, to: toEmail, replyTo: from, subject, text, html });
   try {
-    await smtpSend(env, { from, to: [msg.email], raw });
+    await smtpSend(env, { from, to: [toEmail], raw });
   } catch (e) {
     console.error('reply send failed', e);
     return json({ error: `The reply could not be sent. ${e.message || ''}`.trim() }, 502);
   }
 
-  // Keep a copy in the Inbox and mark the request answered.
-  const now = new Date().toISOString();
-  await Promise.allSettled([
+  // Keep a copy in Sent and, for a reply, mark the request answered.
+  const now = new Date().toISOString(), saves = [
     fetch(`${env.SUPABASE_URL}/rest/v1/message_replies`, { method: 'POST', headers: { ...sbHeaders(env, staff.auth), prefer: 'return=minimal' },
-      body: JSON.stringify({ message_id: id, subject, body, sender_name: senderName, sent_by: staff.user.id }) }),
-    fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}`, { method: 'PATCH', headers: { ...sbHeaders(env, staff.auth), prefer: 'return=minimal' },
-      body: JSON.stringify({ status: 'replied', read_at: msg.read_at || now }) })
-  ]);
+      body: JSON.stringify({ message_id: id || null, to_email: toEmail, to_name: toName, subject, body, sender_name: senderName, sent_by: staff.user.id }) })];
+  if (id) saves.push(fetch(`${env.SUPABASE_URL}/rest/v1/messages?id=eq.${id}`, { method: 'PATCH', headers: { ...sbHeaders(env, staff.auth), prefer: 'return=minimal' },
+    body: JSON.stringify({ status: msg.status === 'new' ? 'replied' : msg.status, read_at: msg.read_at || now }) }));
+  await Promise.allSettled(saves);
   return json({ ok: true });
 }
 
