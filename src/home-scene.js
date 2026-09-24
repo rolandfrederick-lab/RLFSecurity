@@ -11,12 +11,12 @@ import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { buildBadge } from './badge-model.js';
 import { buildFlashlight } from './flashlight-model.js';
 
-const LEAN = 0.42;        // badge tilt back from upright, in radians
-const BADGE_X = -60;      // where along the flashlight the badge rests
-const BADGE_HALF = 100;   // badge center to its bottom ball tip
-const REST_RADIUS = 35;   // flashlight radius at the contact point, plus clearance
-const AXIS_Y = 38;        // flashlight axis height at its middle
-const AXIS_TILT = 0.04;   // head is wider than the tail, so it sits slightly raised
+const LEAN = 0.3;         // badge tilt back from upright, in radians
+const BADGE_HALF = 100;   // badge center to its top and bottom ball tips
+const BALL_DEPTH = 5;     // how far the ball tips stick out behind the badge
+const REST_RADIUS = 29;   // flashlight body radius where the badge top touches it
+const TAIL_OFFSET = 201;  // flashlight center to the bottom of its tail switch
+const STAGE_HEIGHT = 440; // ground to lens, roughly
 
 function shadowTexture() {
   const c = document.createElement('canvas');
@@ -34,30 +34,28 @@ function shadowTexture() {
 function buildStage(font) {
   const stage = new Group();
 
+  // Flashlight standing on its tail, lens up, centered on the spin axis.
   const flashlight = buildFlashlight();
-  flashlight.rotation.z = AXIS_TILT;
+  flashlight.rotation.z = Math.PI / 2;
+  flashlight.position.set(0, TAIL_OFFSET, 0);
 
-  // Badge: tilt it back, stand its bottom tip on the ground, then move the
-  // flashlight behind it so the badge's back rests on the flashlight body.
+  // Badge: tilt it back and stand its bottom tip on the ground, with its top
+  // tip resting against the front of the flashlight body.
   const lean = new Group();
   lean.add(buildBadge(font));
   lean.rotation.x = -LEAN;
-  lean.position.set(BADGE_X, BADGE_HALF * Math.cos(LEAN), 0);
+  const topZ = REST_RADIUS + BALL_DEPTH;
+  lean.position.set(0, BADGE_HALF * Math.cos(LEAN), topZ + BADGE_HALF * Math.sin(LEAN));
 
-  const axisAtBadge = AXIS_Y + BADGE_X * Math.tan(AXIS_TILT);
-  const s = Math.sin(LEAN), c = Math.cos(LEAN);
-  const flashZ = (-REST_RADIUS - s * (axisAtBadge - BADGE_HALF * c)) / c;
-  flashlight.position.set(0, AXIS_Y, flashZ);
-
-  const shadow = new Mesh(new PlaneGeometry(620, 240), new MeshBasicMaterial({
+  const shadow = new Mesh(new PlaneGeometry(380, 380), new MeshBasicMaterial({
     map: shadowTexture(), transparent: true, depthWrite: false
   }));
   shadow.rotation.x = -Math.PI / 2;
-  shadow.position.set(0, 0.5, flashZ + 10);
+  shadow.position.set(0, 0.5, 40);
 
   stage.add(shadow, flashlight, lean);
   // Center the pair vertically around the origin.
-  stage.position.y = -95;
+  stage.position.y = -STAGE_HEIGHT / 2 - 40;
   return stage;
 }
 
@@ -100,10 +98,10 @@ function start(container) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     wide = w > 900;
-    // Keep the whole still life in view: about 560 units wide, 300 tall.
+    // Keep the whole still life in view, with room for the beam above it.
     const t = Math.tan((camera.fov * Math.PI / 180) / 2);
-    const fitW = wide ? 900 : 600;
-    const dist = Math.max(170 / t, (fitW / 2) / (t * camera.aspect));
+    const fitW = wide ? 700 : 420;
+    const dist = Math.max((STAGE_HEIGHT * 1.45 / 2) / t, (fitW / 2) / (t * camera.aspect));
     camera.position.set(0, dist * 0.22, dist);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();

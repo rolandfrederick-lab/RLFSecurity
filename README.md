@@ -17,7 +17,7 @@ Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 ## Animations
 
 - `public/js/silk.js`: animated gold silk background (behind the whole home page).
-- `src/home-scene.js`: 3D badge leaning against a flashlight, fixed behind the home page;
+- `src/home-scene.js`: 3D badge leaning against an upright flashlight, fixed behind the home page;
   it turns a full circle as you scroll. The models are in `src/badge-model.js` and
   `src/flashlight-model.js`. These are built into `public/js/home-scene.js`: after
   editing them, run `npm install` once, then `npm run build`, and commit the rebuilt
