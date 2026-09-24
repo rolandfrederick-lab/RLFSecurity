@@ -4,14 +4,16 @@ About 30 minutes, all from a browser. Nothing to install.
 
 What is in this folder:
 
-- `payroll/schema.sql` builds the database: tables, access rules, and the time clock functions.
+- `supabase/migrations/20260924180000_payroll_schema.sql` builds the database: tables, access rules, and the time clock functions.
 - `public/app/` is the app itself. It is published with the website at https://rlfsecurity.com/app/.
 - `public/app/config.js` is where your two Supabase values go.
 
 ## 1. Create the database (Supabase)
 
 1. Sign up at supabase.com and create a new project. Pick a region in the US. Save the database password somewhere safe.
-2. Open **SQL Editor**, paste the whole contents of `schema.sql`, and run it once. It should finish with no errors.
+2. Create the database, one of two ways (never both; the setup must run exactly once):
+   - **Automatic (recommended):** in Supabase, Project Settings, Integrations, GitHub, connect this repository (`rolandfrederick-lab/RLFSecurity`), set the Supabase directory to `supabase` and the production branch to `main`, and turn on deploying to production. Supabase then applies the files in `supabase/migrations` itself, now and whenever new ones are pushed.
+   - **By hand:** open **SQL Editor**, paste the whole contents of the migration file above, and run it once. It should finish with no errors.
 3. Open the project's **Connect** dialog (or Settings, API Keys). Copy the **Project URL** and the **publishable key** (starts with `sb_publishable_`).
 4. Paste both into `public/app/config.js`. Never put a secret key (`sb_secret_`) in this file. The publishable key is meant to be public; the access rules in the database are what protect the data.
 

@@ -1,6 +1,6 @@
 -- =====================================================================
 -- R L Frederick Private Security payroll + time clock  |  Supabase database setup
--- Run this whole file ONCE in the Supabase SQL Editor (new project).
+-- Applied once by Supabase's GitHub integration, or run ONCE by hand in the SQL Editor (new project).
 -- The FIRST person to create an account in the app becomes the owner.
 -- =====================================================================
 

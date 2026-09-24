@@ -9,7 +9,9 @@ Supabase project, so the two companies' data stay separate.
 
 - `public/app/`: the app (plain HTML and JavaScript; no build step).
 - `public/app/config.js`: the security company's Supabase Project URL and publishable key.
-- `payroll/schema.sql`: run once in the Supabase SQL Editor to create the database.
+- `supabase/migrations/`: the database setup. Supabase's GitHub integration applies it to the
+  project automatically; database changes go in new, dated files in this folder.
+- `supabase/config.toml`: the linked Supabase project and its login settings.
 - `payroll/SETUP.md`: full setup and first-run guide.
 - `payroll/tests/sql/`: database tests carried over from the original app.
 

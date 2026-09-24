@@ -1,0 +1,12 @@
+# Supabase project for R L Frederick Private Security (payroll and time clock).
+# Linked to this repository through Supabase's GitHub integration: migrations in
+# supabase/migrations are applied to the project when they reach the production branch.
+project_id = "yovnncgvdfebhtrhlrqt"
+
+[auth]
+site_url = "https://rlfsecurity.com/app/"
+additional_redirect_urls = ["https://rlfsecurity.com/app/**"]
+
+[auth.email]
+# New accounts still can't see anything until an owner or manager approves them in the app.
+enable_confirmations = false

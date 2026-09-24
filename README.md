@@ -18,7 +18,8 @@ Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 
 `public/app/` is the staff payroll and GPS time clock, published at
 https://rlfsecurity.com/app/ and linked as "Staff login" in the footer. It runs on the
-security company's own Supabase project. See `payroll/README.md` and `payroll/SETUP.md`.
+security company's own Supabase project, whose database setup lives in `supabase/migrations/`.
+See `payroll/README.md` and `payroll/SETUP.md`.
 
 ## Animations
 
