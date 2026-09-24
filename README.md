@@ -44,9 +44,12 @@ http://localhost:8000. (The 3D scene needs a web server; it doesn't load when th
 
 ## Contact form
 
-The form opens the visitor's email app with the request addressed to
-rolandfrederick@gmail.com. To receive submissions directly instead, point the
-form at a form service (for example Formspree) or a backend.
+The form posts to `/api/contact`, handled by the Worker in `src/worker.js`, which emails
+the request from website@rlfsecurity.com to the owner through Cloudflare Email Routing
+(`send_email` binding in `wrangler.jsonc`). The destination must be a verified address in
+Email Routing; to change it, update both `destination_address` and `CONTACT_EMAIL_TO` in
+`wrangler.jsonc`. A hidden field filters out bots. If sending fails, the form falls back
+to opening the visitor's email app.
 
 ## Content still to fill in
 

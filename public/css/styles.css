@@ -667,3 +667,6 @@ body.home .hero::after { background: linear-gradient(90deg, rgba(11, 11, 12, 0.8
 .photo.has-photo { padding: 0; overflow: hidden; }
 .photo .site-photo,
 .ag-panel__media .site-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Hidden field that only bots fill in (contact form spam trap) */
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

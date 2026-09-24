@@ -1,8 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "rlfsecurity",
+  "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
   "assets": {
-    "directory": "./public"
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  // Contact form: emails go through Cloudflare Email Routing to this verified address.
+  "send_email": [
+    { "name": "CONTACT_EMAIL", "destination_address": "rolandfrederick@gmail.com" }
+  ],
+  "vars": {
+    "CONTACT_EMAIL_TO": "rolandfrederick@gmail.com"
   }
 }
