@@ -40,7 +40,10 @@ async function handleContact(request, env) {
   if (!name || !message) return json({ error: 'Please add your name and a message.' }, 400);
   if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) return json({ error: 'Please check your email address.' }, 400);
 
+  // Delivered to the verified Gmail inbox (env.CONTACT_EMAIL_TO), but addressed to the
+  // business address, so Gmail replies from the business address once "Send mail as" is set up.
   const to = env.CONTACT_EMAIL_TO;
+  const shownTo = env.CONTACT_SHOWN_TO || to;
   const body = [
     `New request from the website contact form.`,
     ``,
@@ -57,7 +60,7 @@ async function handleContact(request, env) {
 
   const raw = [
     `From: ${encodeWord(FROM_NAME)} <${FROM}>`,
-    `To: <${to}>`,
+    `To: <${shownTo}>`,
     `Reply-To: ${encodeWord(name)} <${email}>`,
     `Subject: ${encodeWord(`Website request: ${need || 'General'} from ${name}`)}`,
     `Date: ${new Date().toUTCString()}`,

@@ -12,6 +12,7 @@
     { "name": "CONTACT_EMAIL", "destination_address": "rolandfrederick@gmail.com" }
   ],
   "vars": {
-    "CONTACT_EMAIL_TO": "rolandfrederick@gmail.com"
+    "CONTACT_EMAIL_TO": "rolandfrederick@gmail.com",
+    "CONTACT_SHOWN_TO": "rolandfrederick@rlfsecurity.com"
   }
 }
