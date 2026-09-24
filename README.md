@@ -14,9 +14,21 @@ The website files are in `public/`.
 
 Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 
+## Animations
+
+- `public/js/silk.js`: animated silk background behind the home page headline.
+- `public/js/accordion.js`: expanding service gallery on the Services page. Replace each
+  `[PHOTO: ...]` placeholder with `<img src="images/..." alt="...">` when photos are ready.
+- `src/badge3d.js`: 3D metallic badge on the home page. It is built into
+  `public/js/badge3d.js`; after editing it, run `npm install` once, then `npm run build`,
+  and commit the rebuilt file. The badge lettering uses `public/fonts/cinzel-badge.json`,
+  made from the Cinzel font (SIL Open Font License).
+
 ## Viewing locally
 
-Open `public/index.html` in a browser. No build step is needed.
+Serve the `public/` folder, for example `python3 -m http.server -d public`, and open
+http://localhost:8000. (The 3D badge needs a web server; opening the file directly shows
+the flat badge instead.) No build step is needed.
 
 ## Contact form
 
