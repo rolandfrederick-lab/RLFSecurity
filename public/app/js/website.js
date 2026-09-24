@@ -1,7 +1,7 @@
 /* ================= website (owner edits rlfsecurity.com) ================= */
 /* Text fields and photo slots. Keys match the data-c / data-photo attributes on the public site. */
 const WEB_TEXT = [
-  ["Contact details (every page)", [["phone", "Phone number", "313-693-5829"], ["email", "Email address", "rolandfrederick@gmail.com"], ["serviceArea", "Service area", "Detroit and surrounding metro area"], ["hours", "Office hours", "Example: Mon to Fri, 9 am to 5 pm"]]],
+  ["Contact details (every page)", [["phone", "Direct phone", "313-693-5829"], ["phoneOffice", "Office phone (leave empty to hide it on the site)", "Example: 313-555-0100"], ["email", "Email address", "rolandfrederick@gmail.com"], ["serviceArea", "Service area", "Detroit and surrounding metro area"], ["hours", "Office hours", "Example: Mon to Fri, 9 am to 5 pm"]]],
   ["Home page notice", [["notice", "Short notice shown at the top of the home page (leave empty for none)", "Example: Now hiring licensed officers. Call to apply."]]],
   ["Credentials", [["licenseType", "License type", "Example: Security Guard Agency"], ["licenseNumber", "State of Michigan license number", ""], ["instructorCert", "Instructor certification", "Example: NRA Certified Pistol Instructor"], ["years", "Years in business (number)", "Example: 10"]]],
   ["About page", [["history", "Company history", "When the company was founded, why, and the kinds of clients served since.", true], ["bio", "Owner bio", "Background, years of experience, certifications, and what led to founding the company.", true]]],

@@ -24,6 +24,9 @@
       if (el.dataset.cLink === 'mailto') el.href = 'mailto:' + v;
     });
 
+    // Lines that only make sense when their value is set, such as the office phone.
+    each('[data-c-wrap]', function (el) { el.hidden = !d[el.dataset.cWrap]; });
+
     var notice = document.getElementById('site-notice');
     if (notice) notice.hidden = !d.notice;
 
