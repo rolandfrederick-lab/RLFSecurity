@@ -4,7 +4,8 @@
 
 import {
   WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, PlaneGeometry, MeshBasicMaterial,
-  PMREMGenerator, DirectionalLight, ACESFilmicToneMapping, SRGBColorSpace, CanvasTexture
+  PMREMGenerator, DirectionalLight, ACESFilmicToneMapping, SRGBColorSpace, CanvasTexture,
+  AdditiveBlending
 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
@@ -15,8 +16,8 @@ const LEAN = 0.3;         // badge tilt back from upright, in radians
 const BADGE_HALF = 100;   // badge center to its top and bottom ball tips
 const BALL_DEPTH = 5;     // how far the ball tips stick out behind the badge
 const REST_RADIUS = 29;   // flashlight body radius where the badge top touches it
-const TAIL_OFFSET = 201;  // flashlight center to the bottom of its tail switch
-const STAGE_HEIGHT = 440; // ground to lens, roughly
+const LENS_OFFSET = 195;  // flashlight center to the front of its bezel
+const STAGE_HEIGHT = 400; // ground to tail cap, roughly
 
 function shadowTexture() {
   const c = document.createElement('canvas');
@@ -31,13 +32,34 @@ function shadowTexture() {
   return new CanvasTexture(c);
 }
 
+function glowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(128, 128, 30, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255,236,190,0.9)');
+  grad.addColorStop(0.4, 'rgba(255,220,150,0.35)');
+  grad.addColorStop(1, 'rgba(255,210,140,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 256, 256);
+  return new CanvasTexture(c);
+}
+
 function buildStage(font) {
   const stage = new Group();
 
-  // Flashlight standing on its tail, lens up, centered on the spin axis.
-  const flashlight = buildFlashlight();
-  flashlight.rotation.z = Math.PI / 2;
-  flashlight.position.set(0, TAIL_OFFSET, 0);
+  // Flashlight standing on its bezel, lens down and tail cap up, centered on
+  // the spin axis.
+  const flashlight = buildFlashlight({ beam: false });
+  flashlight.rotation.z = -Math.PI / 2;
+  flashlight.position.set(0, LENS_OFFSET, 0);
+
+  // Light spilling out from under the lens onto the surface.
+  const glow = new Mesh(new PlaneGeometry(300, 300), new MeshBasicMaterial({
+    map: glowTexture(), transparent: true, opacity: 0.55, depthWrite: false, blending: AdditiveBlending
+  }));
+  glow.rotation.x = -Math.PI / 2;
+  glow.position.y = 1;
 
   // Badge: tilt it back and stand its bottom tip on the ground, with its top
   // tip resting against the front of the flashlight body.
@@ -53,9 +75,9 @@ function buildStage(font) {
   shadow.rotation.x = -Math.PI / 2;
   shadow.position.set(0, 0.5, 40);
 
-  stage.add(shadow, flashlight, lean);
+  stage.add(shadow, glow, flashlight, lean);
   // Center the pair vertically around the origin.
-  stage.position.y = -STAGE_HEIGHT / 2 - 40;
+  stage.position.y = -STAGE_HEIGHT / 2 - 10;
   return stage;
 }
 
@@ -98,10 +120,10 @@ function start(container) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     wide = w > 900;
-    // Keep the whole still life in view, with room for the beam above it.
+    // Keep the whole still life in view.
     const t = Math.tan((camera.fov * Math.PI / 180) / 2);
     const fitW = wide ? 700 : 420;
-    const dist = Math.max((STAGE_HEIGHT * 1.45 / 2) / t, (fitW / 2) / (t * camera.aspect));
+    const dist = Math.max((STAGE_HEIGHT * 1.3 / 2) / t, (fitW / 2) / (t * camera.aspect));
     camera.position.set(0, dist * 0.22, dist);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
