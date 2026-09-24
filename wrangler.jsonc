@@ -14,9 +14,11 @@
   "vars": {
     "CONTACT_EMAIL_TO": "rolandfrederick@gmail.com",
     "CONTACT_SHOWN_TO": "rolandfrederick@rlfsecurity.com",
-    // Replies from the staff app Inbox are sent from this address through Resend.
-    // The Resend API key is a secret: add RESEND_API_KEY in the Cloudflare dashboard.
+    // Replies from the staff app Inbox are sent through this Gmail account as REPLY_FROM
+    // (a "Send mail as" address in that Gmail). The Gmail app password is a secret:
+    // add GMAIL_APP_PASSWORD in the Cloudflare dashboard. Never put it in this file.
     "REPLY_FROM": "rolandfrederick@rlfsecurity.com",
+    "GMAIL_USER": "rolandfrederick@gmail.com",
     // Public values (same as public/app/config.js); the database rules protect the data.
     "SUPABASE_URL": "https://yovnncgvdfebhtrhlrqt.supabase.co",
     "SUPABASE_KEY": "sb_publishable_B49NyMpcIfP5D1aCQDiXTg_DQEtCMye"

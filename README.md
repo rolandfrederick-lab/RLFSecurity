@@ -52,14 +52,17 @@ bots; the form never opens the visitor's email app.
 
 Replies written in the Inbox go through `/api/reply`: the Worker checks the Supabase
 sign-in (owner or manager only), builds the branded reply (the sender's name and title,
-the phone numbers from the Website settings, and the original request quoted), sends it
-through **Resend** from rolandfrederick@rlfsecurity.com with a blind copy to that address,
-and records it in `message_replies`.
+the phone numbers from the Website settings, and the original request quoted), and sends
+it through **Gmail** (smtp.gmail.com, port 465) signed in as `GMAIL_USER` with a Gmail
+app password, from rolandfrederick@rlfsecurity.com (a "Send mail as" address on that
+Gmail account). Gmail keeps a copy in its Sent folder, and the reply is recorded in
+`message_replies`.
 
-One-time Resend setup: create an account at resend.com, add the domain `rlfsecurity.com`
-and let it add its DNS records in Cloudflare, create an API key with sending access, and
-add it in Cloudflare (Workers & Pages, rlfsecurity, Settings, Variables and Secrets) as a
-**secret** named `RESEND_API_KEY`. Until then the Inbox can preview replies but not send.
+One-time setup: in Cloudflare, Workers & Pages, rlfsecurity, Settings, Variables and
+Secrets, add a **secret** named `GMAIL_APP_PASSWORD` holding the Gmail app password
+(from myaccount.google.com/apppasswords). Never put it in the code. Until it is added,
+the Inbox can preview replies but not send them. If the app password is ever revoked or
+the Google password changes, create a new app password and update the secret.
 
 ## Content still to fill in
 

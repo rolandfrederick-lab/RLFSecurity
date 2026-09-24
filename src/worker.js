@@ -4,9 +4,11 @@
 //   POST /api/contact  website contact form: emails the request to the owner through
 //                      Email Routing and saves it to the staff app's Inbox (Supabase).
 //   POST /api/reply    staff app Inbox: previews or sends a branded reply to a request
-//                      through Resend, from the business address. Owners and managers only.
+//                      through Gmail (app password), from the business address.
+//                      Owners and managers only.
 
 import { EmailMessage } from 'cloudflare:email';
+import { connect } from 'cloudflare:sockets';
 
 const FROM = 'website@rlfsecurity.com';
 const FROM_NAME = 'RLF Security Website';
@@ -206,6 +208,77 @@ ${emailBottom('R L Frederick Private Security &amp; Weapon Safety &middot; Detro
   return { html, text };
 }
 
+// A complete email (plain text and HTML versions) ready to hand to a mail server.
+function mimeMessage({ from, fromAddress, to, replyTo, subject, text, html }) {
+  const boundary = `rlf-${crypto.randomUUID()}`;
+  return [
+    `From: ${encodeWord(from)} <${fromAddress}>`,
+    `To: <${to}>`,
+    `Reply-To: <${replyTo}>`,
+    `Subject: ${encodeWord(subject)}`,
+    `Date: ${new Date().toUTCString()}`,
+    `Message-ID: <${crypto.randomUUID()}@rlfsecurity.com>`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
+    `Content-Type: text/plain; charset=utf-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    wrap76(b64(text)),
+    `--${boundary}`,
+    `Content-Type: text/html; charset=utf-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    wrap76(b64(html)),
+    `--${boundary}--`,
+    ``
+  ].join('\r\n');
+}
+
+// Send through Gmail's mail server with the account's app password (encrypted TLS on
+// port 465). Gmail allows the From address because it is a "Send mail as" address on
+// that account, and it files a copy in Gmail's Sent folder.
+async function smtpSend(env, { from, to, raw }) {
+  const host = env.SMTP_HOST || 'smtp.gmail.com', port = Number(env.SMTP_PORT || 465);
+  const socket = connect({ hostname: host, port }, { secureTransport: env.SMTP_TLS === 'off' ? 'off' : 'on' });
+  const writer = socket.writable.getWriter(), reader = socket.readable.getReader();
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let buf = '';
+  // Read one full server reply (the last line has a space after the 3-digit code).
+  const reply = async () => {
+    for (;;) {
+      const lines = buf.split('\r\n');
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (/^\d{3} /.test(lines[i])) { const text = lines.slice(0, i + 1).join('\n'); buf = lines.slice(i + 1).join('\r\n'); return { code: Number(lines[i].slice(0, 3)), text }; }
+      }
+      const { value, done } = await reader.read();
+      if (done) throw new Error('The mail server closed the connection.');
+      buf += dec.decode(value, { stream: true });
+    }
+  };
+  const step = async (line, ok, what) => {
+    if (line !== null) await writer.write(enc.encode(line + '\r\n'));
+    const r = await reply();
+    if (!ok.includes(r.code)) throw new Error(`${what} failed (${r.text.split('\n').pop()})`);
+    return r;
+  };
+  try {
+    await step(null, [220], 'Connecting to Gmail');
+    await step('EHLO rlfsecurity.com', [250], 'Greeting Gmail');
+    const user = env.GMAIL_USER, pass = String(env.GMAIL_APP_PASSWORD).replace(/\s+/g, '');
+    await step(`AUTH PLAIN ${b64(`\0${user}\0${pass}`)}`, [235], 'Signing in to Gmail (check the app password)');
+    await step(`MAIL FROM:<${from}>`, [250], 'Sender');
+    for (const rcpt of to) await step(`RCPT TO:<${rcpt}>`, [250, 251], `Recipient ${rcpt}`);
+    await step('DATA', [354], 'Starting the message');
+    // Lines that begin with a dot get a second dot (SMTP rule); the lone dot ends the message.
+    await step(raw.replace(/\r\n\./g, '\r\n..') + '\r\n.', [250], 'Sending');
+    await writer.write(enc.encode('QUIT\r\n')).catch(() => {});
+  } finally {
+    try { await socket.close(); } catch {}
+  }
+}
+
 async function handleReply(request, env) {
   const staff = await staffFrom(request, env);
   if (!staff) return json({ error: 'Please sign in again. Only owners and managers can send replies.' }, 401);
@@ -232,16 +305,13 @@ async function handleReply(request, env) {
   const { html, text } = replyContent({ msg, body, senderName, senderTitle, site, from });
   if (!f.send) return json({ ok: true, preview: html, to: msg.email });
 
-  if (!env.RESEND_API_KEY) return json({ error: 'Sending replies is not switched on yet. The Resend key still needs to be added in Cloudflare.' }, 503);
-  const r = await fetch(env.RESEND_API_URL || 'https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: `${senderName} · R L Frederick Private Security <${from}>`, to: [msg.email], bcc: [from], reply_to: from, subject, html, text })
-  });
-  if (!r.ok) {
-    const detail = await r.text();
-    console.error('reply send failed', r.status, detail);
-    return json({ error: `The reply could not be sent. ${(() => { try { return JSON.parse(detail).message || ''; } catch { return ''; } })()}`.trim() }, 502);
+  if (!env.GMAIL_APP_PASSWORD) return json({ error: 'Sending replies is not switched on yet. The Gmail app password still needs to be added in Cloudflare.' }, 503);
+  const raw = mimeMessage({ from: `${senderName} · R L Frederick Private Security`, fromAddress: from, to: msg.email, replyTo: from, subject, text, html });
+  try {
+    await smtpSend(env, { from, to: [msg.email], raw });
+  } catch (e) {
+    console.error('reply send failed', e);
+    return json({ error: `The reply could not be sent. ${e.message || ''}`.trim() }, 502);
   }
 
   // Keep a copy in the Inbox and mark the request answered.
