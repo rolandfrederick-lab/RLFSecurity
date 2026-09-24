@@ -48,8 +48,8 @@ The form posts to `/api/contact`, handled by the Worker in `src/worker.js`, whic
 the request from website@rlfsecurity.com to the owner through Cloudflare Email Routing
 (`send_email` binding in `wrangler.jsonc`). The destination must be a verified address in
 Email Routing; to change it, update both `destination_address` and `CONTACT_EMAIL_TO` in
-`wrangler.jsonc`. A hidden field filters out bots. If sending fails, the form falls back
-to opening the visitor's email app.
+`wrangler.jsonc`. A hidden field filters out bots. The form never opens the visitor's email
+app; if sending fails, it asks them to try again or call.
 
 ## Content still to fill in
 

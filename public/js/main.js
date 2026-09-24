@@ -10,31 +10,15 @@
   });
 })();
 
-// Contact form: sends the request to the owner's email through the site (/api/contact).
-// If that fails, it falls back to opening the visitor's email app.
+// Contact form: sends the request straight to the owner's email through the site (/api/contact).
+// It never opens the visitor's email app.
 (function () {
   var form = document.getElementById('contact-form');
   if (!form) return;
 
-  var TO = 'rolandfrederick@gmail.com';
   var status = document.getElementById('form-status');
   var button = form.querySelector('button[type="submit"]');
   var site = function (k, d) { return (window.SITE_CONTENT && window.SITE_CONTENT[k]) || d; };
-
-  function openEmailApp(data) {
-    var body = [
-      'Name: ' + data.name,
-      'Organization: ' + (data.organization || '-'),
-      'Email: ' + data.email,
-      'Phone: ' + (data.phone || '-'),
-      'Interested in: ' + data.need,
-      '',
-      data.message
-    ].join('\n');
-    window.location.href = 'mailto:' + site('email', TO) +
-      '?subject=' + encodeURIComponent('Website request: ' + data.need) +
-      '&body=' + encodeURIComponent(body);
-  }
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -59,8 +43,7 @@
         }
       })
       .catch(function () {
-        status.textContent = 'The form could not send just now. Opening your email app instead. You can also call ' + site('phone', '313-693-5829') + '.';
-        openEmailApp(data);
+        status.textContent = 'Sorry, the form could not send just now. Please try again, or call us at ' + site('phone', '313-693-5829') + '.';
       })
       .then(function () { button.disabled = false; });
   });
