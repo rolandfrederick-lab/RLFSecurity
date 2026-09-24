@@ -183,6 +183,12 @@ button{cursor:pointer}
   #ptr{display:none}
   .auth{margin-top:8vh;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:32px 32px 28px;box-shadow:0 20px 50px rgba(0,0,0,.12)}
 }
+.pe-stage{display:flex;justify-content:center;background:#0B0B0C;border-radius:10px;padding:10px;margin:8px 0}
+.pe-stage canvas{touch-action:none;cursor:grab;border-radius:4px;max-width:100%}
+.pe-stage canvas:active{cursor:grabbing}
+.pe-bgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pe-bgs button[aria-pressed=true]{background:var(--gold);color:var(--gold-ink);border-color:var(--gold)}
+input[type=range]{width:100%;accent-color:var(--gold)}
 .webphotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
 .webphoto img,.webphoto-empty{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;margin-bottom:6px}
 .webphoto-empty{display:flex;align-items:center;justify-content:center;color:var(--muted,#667);font-size:14px;background:var(--bg,#f5f7f9)}
@@ -266,6 +272,7 @@ button{cursor:pointer}
 <script src="js/books.js"></script>
 <script src="js/guide.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/photo-editor.js"></script>
 <script src="js/website.js"></script>
 <script src="js/shell.js"></script>
 </body>

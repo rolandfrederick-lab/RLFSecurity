@@ -24,4 +24,10 @@ photos in the public `website` storage bucket (`supabase/migrations/202609242000
 `public/js/content.js` fills them into the pages, and anything left empty keeps the
 page's built-in text.
 
+Photos go through an editor (`public/app/js/photo-editor.js`): crop, zoom, drag to
+position, rotate, and optional background removal using Google MediaPipe's selfie
+segmentation model (Apache-2.0), which runs in the browser and loads from jsDelivr and
+Google's model storage on first use. The untouched original and the edit settings are
+stored with each photo so it can be re-cropped later.
+
 Never put a Supabase secret key (`sb_secret_...`) or database password in this repository.

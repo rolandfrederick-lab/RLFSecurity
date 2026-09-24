@@ -14,6 +14,8 @@ const WEB_PHOTOS = [
   ["Services page gallery", [["services1", "Armed & Unarmed Guards"], ["services2", "Healthcare & Crisis Facilities"], ["services3", "Event Security"], ["services4", "Mobile Patrol"], ["services5", "Weapon Safety Training"]]]
 ];
 const HOME_CAPTIONS = ["On Post", "Access Control", "Event Coverage", "Mobile Patrol", "Training"];
+/* Width / height of each photo frame on the site, so the editor crops to what visitors see. */
+const webAspect = k => k === "aboutTeam" ? 7 / 8 : k === "aboutOwner" ? 4 / 5 : 6 / 5;
 const webPhotoUrl = path => `${CONF.SUPABASE_URL}/storage/v1/object/public/website/${path.split("/").map(encodeURIComponent).join("/")}`;
 let WEB = null;
 
@@ -31,35 +33,33 @@ async function renderWebsite() {
     const i = capKey ? Number(k.slice(4)) - 1 : -1;
     return `<div class="webphoto">${d[k] ? `<img src="${esc(webPhotoUrl(d[k]))}" alt="">` : `<div class="webphoto-empty">No photo yet</div>`}
       ${capKey ? `<label class="f" for="w-${capKey}">Caption</label><input id="w-${capKey}" data-wk="${capKey}" type="text" value="${esc(d[capKey])}" placeholder="${esc(HOME_CAPTIONS[i])}">` : `<b>${esc(label)}</b>`}
-      <div class="actions"><label class="linkbtn" style="padding:6px 0">${d[k] ? "Replace photo" : "Add photo"}<input type="file" accept="image/*" data-wphoto="${k}" hidden></label>${d[k] ? `<button class="linkbtn" style="color:var(--danger)" data-wremove="${k}">Remove</button>` : ""}</div></div>`; }).join("")}</div>`).join("");
+      <div class="actions"><label class="linkbtn" style="padding:6px 0">${d[k] ? "Replace photo" : "Add photo"}<input type="file" accept="image/*" data-wphoto="${k}" hidden></label>${d[k] ? `<button class="linkbtn" data-wadjust="${k}">Crop and adjust</button><button class="linkbtn" style="color:var(--danger)" data-wremove="${k}">Remove</button>` : ""}</div></div>`; }).join("")}</div>`).join("");
   v.innerHTML = `${backMore}<h2>Website</h2><p class="help">Changes show on <a href="../" target="_blank" rel="noopener">rlfsecurity.com</a> as soon as you save. Empty fields keep the placeholder text shown on the site.</p>
     ${text}<button class="primary" id="w-save">Save text changes</button>
-    ${photos}<p class="help">Photos are saved as soon as you pick them. Large photos are shrunk automatically. Only post photos you have permission to show: faces, client buildings and license plates.</p>`;
+    ${photos}<p class="help">When you add a photo, you can crop it, zoom in, move it, rotate it and change the background before it goes on the site. The full original is kept, so you can re-crop it later with Crop and adjust. Only post photos you have permission to show: faces, client buildings and license plates.</p>`;
   $("#w-save").onclick = async () => {
     const data = { ...WEB }; v.querySelectorAll("[data-wk]").forEach(el => { const val = el.value.trim(); if (val) data[el.dataset.wk] = val; else delete data[el.dataset.wk]; });
     const b = $("#w-save"); b.disabled = true; try { await saveWebsite(data); toast("Website updated"); } catch (e) { fail(e); } finally { b.disabled = false; }
   };
+  const label = k => (WEB_PHOTOS.flatMap(x => x[1]).find(x => x[0] === k) || [k, "Photo"])[1];
+  /* Upload the framed photo (and the full original for a new one), then point the site at it. */
+  const place = async (k, result) => {
+    toast("Saving photo..."); const stamp = Date.now(), store = sb.storage.from("website"), put = async (path, blob) => { const up = await store.upload(path, blob, { contentType: "image/jpeg" }); if (up.error) throw up.error; return path; };
+    const data = { ...WEB }, old = [WEB[k], result.original ? WEB[k + "Orig"] : null].filter(Boolean);
+    data[k] = await put(`${k}-${stamp}.jpg`, result.photo);
+    if (result.original) data[k + "Orig"] = await put(`${k}-orig-${stamp}.jpg`, result.original);
+    data[k + "Edit"] = result.params;
+    await saveWebsite(data); if (old.length) await store.remove(old);
+    toast("Photo updated"); renderWebsite();
+  };
   v.querySelectorAll("[data-wphoto]").forEach(inp => inp.onchange = async () => {
-    const k = inp.dataset.wphoto, file = inp.files[0]; if (!file) return; toast("Uploading...");
-    try { const blob = await shrinkPhoto(file), path = `${k}-${Date.now()}.jpg`;
-      const up = await sb.storage.from("website").upload(path, blob, { contentType: "image/jpeg" }); if (up.error) throw up.error;
-      const old = WEB[k]; await saveWebsite({ ...WEB, [k]: path }); if (old) await sb.storage.from("website").remove([old]);
-      toast("Photo updated"); renderWebsite();
-    } catch (e) { fail(e); } });
+    const k = inp.dataset.wphoto, file = inp.files[0]; inp.value = ""; if (!file) return;
+    if (!/^image\//.test(file.type)) return fail(new Error("Pick a photo (JPG or PNG)."));
+    try { const r = await openPhotoEditor({ source: file, aspect: webAspect(k), title: label(k) }); if (r) await place(k, r); } catch (e) { fail(e); } });
+  v.querySelectorAll("[data-wadjust]").forEach(b => b.onclick = async () => {
+    const k = b.dataset.wadjust, orig = WEB[k + "Orig"];
+    try { const r = await openPhotoEditor({ source: webPhotoUrl(orig || WEB[k]), aspect: webAspect(k), params: orig ? WEB[k + "Edit"] : null, title: label(k) }); if (r) await place(k, r); } catch (e) { fail(e); } });
   v.querySelectorAll("[data-wremove]").forEach(b => b.onclick = async () => {
-    const k = b.dataset.wremove, old = WEB[k]; if (!confirm("Remove this photo from the website?")) return;
-    try { const data = { ...WEB }; delete data[k]; await saveWebsite(data); if (old) await sb.storage.from("website").remove([old]); toast("Photo removed"); renderWebsite(); } catch (e) { fail(e); } });
-}
-
-/* Resize to at most 1800 px on the long side and save as JPEG, so phone photos load fast on the website. */
-function shrinkPhoto(file) {
-  return new Promise((resolve, reject) => {
-    if (!/^image\//.test(file.type)) return reject(new Error("Pick a photo (JPG or PNG)."));
-    const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); const max = 1800, s = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
-      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      c.toBlob(b => b ? resolve(b) : reject(new Error("That photo could not be read. Try a JPG or PNG.")), "image/jpeg", 0.85); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That photo could not be read. Try a JPG or PNG.")); };
-    img.src = url;
-  });
+    const k = b.dataset.wremove, old = [WEB[k], WEB[k + "Orig"]].filter(Boolean); if (!confirm("Remove this photo from the website?")) return;
+    try { const data = { ...WEB }; delete data[k]; delete data[k + "Orig"]; delete data[k + "Edit"]; await saveWebsite(data); if (old.length) await sb.storage.from("website").remove(old); toast("Photo removed"); renderWebsite(); } catch (e) { fail(e); } });
 }
