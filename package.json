@@ -3,7 +3,7 @@
   "private": true,
   "description": "R L Frederick Private Security & Weapon Safety website",
   "scripts": {
-    "build": "esbuild src/badge3d.js --bundle --minify --format=esm --target=es2020 --outfile=public/js/badge3d.js"
+    "build": "esbuild src/home-scene.js --bundle --minify --format=esm --target=es2020 --outfile=public/js/home-scene.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

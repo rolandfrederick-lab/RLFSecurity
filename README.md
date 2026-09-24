@@ -16,19 +16,21 @@ Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 
 ## Animations
 
-- `public/js/silk.js`: animated silk background behind the home page headline.
-- `public/js/accordion.js`: expanding service gallery on the Services page. Replace each
-  `[PHOTO: ...]` placeholder with `<img src="images/..." alt="...">` when photos are ready.
-- `src/badge3d.js`: 3D metallic badge on the home page. It is built into
-  `public/js/badge3d.js`; after editing it, run `npm install` once, then `npm run build`,
-  and commit the rebuilt file. The badge lettering uses `public/fonts/cinzel-badge.json`,
-  made from the Cinzel font (SIL Open Font License).
+- `public/js/silk.js`: animated gold silk background (behind the whole home page).
+- `src/home-scene.js`: 3D badge leaning against a flashlight, fixed behind the home page;
+  it turns a full circle as you scroll. The models are in `src/badge-model.js` and
+  `src/flashlight-model.js`. These are built into `public/js/home-scene.js`: after
+  editing them, run `npm install` once, then `npm run build`, and commit the rebuilt
+  file. The badge lettering uses `public/fonts/cinzel-badge.json`, made from the Cinzel
+  font (SIL Open Font License).
+- `public/js/accordion.js`: expanding photo galleries on the home and Services pages.
+  Replace each `[PHOTO: ...]` placeholder with `<img src="images/..." alt="...">` when
+  photos are ready.
 
 ## Viewing locally
 
 Serve the `public/` folder, for example `python3 -m http.server -d public`, and open
-http://localhost:8000. (The 3D badge needs a web server; opening the file directly shows
-the flat badge instead.) No build step is needed.
+http://localhost:8000. (The 3D scene needs a web server; it doesn't load when the file is opened directly.) No build step is needed.
 
 ## Contact form
 

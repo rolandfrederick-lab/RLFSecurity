@@ -1,17 +1,12 @@
-// 3D metallic badge for the home page hero.
-// Built into public/js/badge3d.js with `npm run build` (see package.json).
+// 3D metallic badge model (six-point star, PRIVATE / SECURITY banners, RLF seal).
 //
 // Shapes are laid out in the same 200 x 220 grid as the flat SVG badge
 // (x right, y down, center 100,112) and converted to 3D space by toXY().
 
 import {
-  WebGLRenderer, Scene, PerspectiveCamera, Group, Mesh, Shape, Path,
-  ExtrudeGeometry, SphereGeometry, CylinderGeometry, MeshPhysicalMaterial,
-  PMREMGenerator, DirectionalLight, ACESFilmicToneMapping, SRGBColorSpace,
-  CanvasTexture, RepeatWrapping, QuadraticBezierCurve, Vector2, Matrix4
+  Group, Mesh, Shape, Path, ExtrudeGeometry, SphereGeometry, CylinderGeometry,
+  MeshPhysicalMaterial, CanvasTexture, RepeatWrapping, QuadraticBezierCurve, Vector2, Matrix4
 } from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
 const CX = 100, CY = 112;
@@ -65,7 +60,9 @@ function engravingTexture() {
   return t;
 }
 
-function buildBadge(font) {
+// Returns a Group about 210 units tall, centered on the origin, facing +z,
+// with its back face at z = 0.
+export function buildBadge(font) {
   const badge = new Group();
   const engraving = engravingTexture();
 
@@ -209,112 +206,17 @@ function buildBadge(font) {
     badge.add(new Mesh(g, enamel));
   }
 
+  // Pin and catch on the back, like a real badge
+  const pinBar = new Mesh(new CylinderGeometry(1.4, 1.4, 104, 16), silver);
+  pinBar.rotation.z = Math.PI / 2;
+  pinBar.position.set(2, 28, -3.2);
+  badge.add(pinBar);
+  for (const [x, r] of [[-54, 4], [54, 4.5]]) {
+    const post = new Mesh(new CylinderGeometry(r, r, 5, 20), silverShade);
+    post.rotation.x = Math.PI / 2;
+    post.position.set(x, 28, -1.5);
+    badge.add(post);
+  }
+
   return badge;
 }
-
-function start(container) {
-  const canvas = document.createElement('canvas');
-  let renderer;
-  try {
-    renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true });
-  } catch (e) {
-    return; // No WebGL: the flat SVG badge stays in place.
-  }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.outputColorSpace = SRGBColorSpace;
-  renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.95;
-
-  const scene = new Scene();
-  const pmrem = new PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.75;
-
-  const key = new DirectionalLight(0xfff4dd, 0.6);
-  key.position.set(-60, 120, 160);
-  scene.add(key);
-  const rimLight = new DirectionalLight(0xffffff, 0.4);
-  rimLight.position.set(120, -40, 80);
-  scene.add(rimLight);
-
-  const camera = new PerspectiveCamera(26, 1, 10, 2000);
-
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let badge = null;
-  let targetX = 0, targetY = 0, curX = 0, curY = 0;
-  let pointerActive = false;
-  let visible = true;
-  let running = false;
-
-  function resize() {
-    const w = container.clientWidth, h = container.clientHeight;
-    if (!w || !h) return;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    // Fit the whole badge (about 210 units tall, 200 wide) with a little margin.
-    const fitH = 225, fitW = 215;
-    const vFov = camera.fov * Math.PI / 180;
-    const distH = (fitH / 2) / Math.tan(vFov / 2);
-    const distW = (fitW / 2) / (Math.tan(vFov / 2) * camera.aspect);
-    camera.position.set(0, 0, Math.max(distH, distW));
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-  }
-
-  function render(time) {
-    if (!badge) return;
-    if (!pointerActive && !reduceMotion) {
-      // Gentle idle sway so the light moves across the metal.
-      targetY = Math.sin(time / 2200) * 0.3;
-      targetX = Math.sin(time / 3100) * 0.12;
-    }
-    curX += (targetX - curX) * 0.06;
-    curY += (targetY - curY) * 0.06;
-    badge.rotation.set(curX, curY, 0);
-    renderer.render(scene, camera);
-  }
-
-  function loop(time) {
-    render(time);
-    if (visible && !document.hidden && !reduceMotion) requestAnimationFrame(loop);
-    else running = false;
-  }
-
-  function play() {
-    if (!running && visible && !document.hidden && !reduceMotion) {
-      running = true;
-      requestAnimationFrame(loop);
-    }
-  }
-
-  window.addEventListener('pointermove', e => {
-    const r = container.getBoundingClientRect();
-    const nx = ((e.clientX - (r.left + r.width / 2)) / window.innerWidth) * 2;
-    const ny = ((e.clientY - (r.top + r.height / 2)) / window.innerHeight) * 2;
-    targetY = Math.max(-1, Math.min(1, nx)) * 0.32;
-    targetX = Math.max(-1, Math.min(1, ny)) * 0.2;
-    pointerActive = e.pointerType === 'mouse';
-  }, { passive: true });
-
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(entries => {
-      visible = entries[0].isIntersecting;
-      play();
-    }).observe(container);
-  }
-  document.addEventListener('visibilitychange', play);
-  window.addEventListener('resize', () => { resize(); if (reduceMotion) render(0); });
-
-  new FontLoader().load(new URL('fonts/cinzel-badge.json', document.baseURI).href, font => {
-    badge = buildBadge(font);
-    if (reduceMotion) badge.rotation.set(0.08, -0.25, 0);
-    scene.add(badge);
-    container.appendChild(canvas);
-    resize();
-    if (reduceMotion) { curX = 0.08; curY = -0.25; targetX = curX; targetY = curY; render(0); }
-    container.classList.add('is-3d');
-    play();
-  });
-}
-
-document.querySelectorAll('[data-badge-3d]').forEach(start);

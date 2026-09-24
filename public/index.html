@@ -11,7 +11,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&amp;family=Barlow:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="home">
+  <div class="scene-bg" aria-hidden="true">
+    <canvas class="silk-bg" data-silk data-color="#7a6421" data-speed="5" data-scale="1" data-noise="1.5" data-rotation="0"></canvas>
+    <div class="scene-3d" data-home-scene></div>
+  </div>
+
   <header class="site-header">
     <div class="container">
       <a class="brand" href="index.html" aria-label="R L Frederick home">
@@ -35,7 +40,6 @@
 
   <main>
     <section class="hero">
-      <canvas class="hero-bg" data-silk data-color="#7a6421" data-speed="5" data-scale="1" data-noise="1.5" data-rotation="0" aria-hidden="true"></canvas>
       <div class="container">
         <div class="hero-text">
           <div class="eyebrow">Detroit, Michigan · Licensed &amp; Insured</div>
@@ -45,42 +49,6 @@
             <a class="btn btn-gold" href="contact.html">Request Security Services</a>
             <a class="btn btn-outline" href="training.html">View Training Courses</a>
           </div>
-        </div>
-        <div class="hero-emblem" data-badge-3d role="img" aria-label="R L Frederick Private Security badge">
-          <svg class="badge-flat" viewBox="0 0 200 220" aria-hidden="true">
-          <defs>
-          <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#f0d06a"/><stop offset="0.45" stop-color="#c9a227"/><stop offset="1" stop-color="#8a6d12"/>
-          </linearGradient>
-          <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#dcd8cf"/><stop offset="1" stop-color="#a9a499"/>
-          </linearGradient>
-          <path id="t-top" d="M 44,88 Q 100,60 156,88"/>
-          <path id="t-bot" d="M 44,144 Q 100,172 156,144"/>
-          </defs>
-          <!-- six-point star -->
-          <polygon points="100.0,22.0 126.0,67.0 177.9,67.0 152.0,112.0 177.9,157.0 126.0,157.0 100.0,202.0 74.0,157.0 22.1,157.0 48.0,112.0 22.1,67.0 74.0,67.0" fill="url(#gold)" stroke="#6b5410" stroke-width="1.2"/>
-          <polygon points="100.0,31.0 123.5,71.3 170.1,71.5 147.0,112.0 170.1,152.5 123.5,152.7 100.0,193.0 76.5,152.7 29.9,152.5 53.0,112.0 29.9,71.5 76.5,71.3" fill="none" stroke="#8a6d12" stroke-width="1" stroke-dasharray="2 1.5"/>
-          <circle cx="100.0" cy="19.0" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/><circle cx="180.5" cy="65.5" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/><circle cx="180.5" cy="158.5" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/><circle cx="100.0" cy="205.0" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/><circle cx="19.5" cy="158.5" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/><circle cx="19.5" cy="65.5" r="7" fill="url(#gold)" stroke="#6b5410" stroke-width="1"/>
-          <!-- center seal -->
-          <circle cx="100" cy="112" r="25" fill="url(#silver)" stroke="#6b5410" stroke-width="1"/>
-          <circle cx="100" cy="112" r="22" fill="#0b0b0c"/>
-          <circle cx="100" cy="112" r="18.5" fill="url(#gold)"/>
-          <text x="100" y="117" text-anchor="middle" font-family="Cinzel, Georgia, serif" font-weight="700" font-size="14" fill="#0b0b0c">RLF</text>
-          <!-- top banner -->
-          <path d="M 36,89 L 28,99 L 42,101 Z" fill="#a9a499"/>
-          <path d="M 164,89 L 172,99 L 158,101 Z" fill="#a9a499"/>
-          <path d="M 38,77 Q 100,47 162,77 L 162,99 Q 100,69 38,99 Z" fill="url(#silver)" stroke="#6b5410" stroke-width="1"/>
-          <!-- bottom banner -->
-          <path d="M 36,143 L 28,153 L 42,155 Z" fill="#a9a499"/>
-          <path d="M 164,143 L 172,153 L 158,155 Z" fill="#a9a499"/>
-          <path d="M 38,133 Q 100,163 162,133 L 162,155 Q 100,185 38,155 Z" fill="url(#silver)" stroke="#6b5410" stroke-width="1"/>
-          <g font-family="Cinzel, Georgia, serif" font-weight="700" fill="#0b0b0c" letter-spacing="3">
-          <text font-size="15"><textPath href="#t-top" startOffset="50%" text-anchor="middle">PRIVATE</textPath></text>
-          <text font-size="13.5"><textPath href="#t-bot" startOffset="50%" text-anchor="middle">SECURITY</textPath></text>
-          </g>
-          <polygon points="92.0,174.8 92.8,176.8 95.0,177.0 93.4,178.4 93.9,180.6 92.0,179.4 90.1,180.6 90.6,178.4 89.0,177.0 91.2,176.8" fill="#0b0b0c"/><polygon points="100.0,175.8 100.8,177.8 103.0,178.0 101.4,179.4 101.9,181.6 100.0,180.4 98.1,181.6 98.6,179.4 97.0,178.0 99.2,177.8" fill="#0b0b0c"/><polygon points="108.0,174.8 108.8,176.8 111.0,177.0 109.4,178.4 109.9,180.6 108.0,179.4 106.1,180.6 106.6,178.4 105.0,177.0 107.2,176.8" fill="#0b0b0c"/>
-          </svg>
         </div>
       </div>
     </section>
@@ -244,6 +212,6 @@
   <script src="js/main.js"></script>
   <script src="js/silk.js"></script>
   <script src="js/accordion.js"></script>
-  <script type="module" src="js/badge3d.js"></script>
+  <script type="module" src="js/home-scene.js"></script>
 </body>
 </html>
