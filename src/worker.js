@@ -22,6 +22,51 @@ const b64 = s => {
 };
 // Header text in UTF-8, safe for names with accents.
 const encodeWord = s => `=?UTF-8?B?${b64(s)}?=`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const wrap76 = s => s.replace(/.{76}/g, '$&\r\n');
+
+// Branded HTML version of the request. Tables and inline styles, because email apps
+// (Gmail, Outlook, Apple Mail) ignore most page-style CSS.
+function requestHtml({ name, email, org, phone, need, message }) {
+  const row = (label, value) => `<tr>
+      <td style="padding:10px 0;border-bottom:1px solid #e6e0d0;width:130px;vertical-align:top;font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8a6d12">${label}</td>
+      <td style="padding:10px 0;border-bottom:1px solid #e6e0d0;vertical-align:top;font:16px Arial,sans-serif;color:#141413">${value}</td></tr>`;
+  const tel = phone.replace(/[^\d+]/g, '');
+  const button = (href, label, dark) => `<a href="${href}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 22px;border-radius:4px;font:700 15px Arial,sans-serif;text-decoration:none;${dark ? 'background:#0b0b0c;color:#f2efe6' : 'background:#c9a227;color:#0b0b0c'}">${label}</a>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Website request</title></head>
+<body style="margin:0;padding:0;background:#f4f1ea">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea"><tr><td align="center" style="padding:24px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e0d0">
+    <tr><td style="background:#0b0b0c;border-bottom:3px solid #c9a227;padding:22px 28px">
+      <span style="font:700 20px Georgia,'Times New Roman',serif;letter-spacing:.12em;color:#c9a227">&#9733;</span>
+      <span style="font:700 17px Georgia,'Times New Roman',serif;letter-spacing:.1em;color:#f2efe6">&nbsp;R L FREDERICK</span>
+      <div style="font:12px Arial,sans-serif;letter-spacing:.14em;color:#b8b3a6;margin-top:4px">PRIVATE SECURITY &amp; WEAPON SAFETY</div>
+    </td></tr>
+    <tr><td style="padding:28px 28px 8px">
+      <div style="font:600 12px Arial,sans-serif;letter-spacing:.18em;color:#8a6d12">NEW WEBSITE REQUEST</div>
+      <h1 style="margin:6px 0 4px;font:700 26px Georgia,'Times New Roman',serif;color:#141413">${esc(name)}</h1>
+      <div style="font:16px Arial,sans-serif;color:#5f5b52">${esc(need || 'General question')}</div>
+    </td></tr>
+    <tr><td style="padding:12px 28px 4px">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${row('Email', `<a href="mailto:${esc(email)}" style="color:#8a6d12">${esc(email)}</a>`)}
+        ${row('Phone', phone ? `<a href="tel:${esc(tel)}" style="color:#8a6d12">${esc(phone)}</a>` : '<span style="color:#9a958a">Not given</span>')}
+        ${row('Organization', org ? esc(org) : '<span style="color:#9a958a">Not given</span>')}
+      </table>
+    </td></tr>
+    <tr><td style="padding:20px 28px 8px">
+      <div style="font:600 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8a6d12;margin-bottom:8px">Message</div>
+      <div style="background:#faf8f2;border-left:3px solid #c9a227;padding:14px 16px;font:16px/1.55 Arial,sans-serif;color:#141413;white-space:pre-wrap">${esc(message)}</div>
+    </td></tr>
+    <tr><td style="padding:20px 28px 26px">
+      ${button(`mailto:${esc(email)}?subject=${encodeURIComponent('Re: your request to R L Frederick Private Security')}`, `Reply to ${esc(name.split(' ')[0] || name)}`)}${phone ? button(`tel:${esc(tel)}`, 'Call', true) : ''}
+      <div style="font:13px Arial,sans-serif;color:#5f5b52;margin-top:6px">Or just press Reply in your email app. It goes straight to ${esc(name)}.</div>
+    </td></tr>
+    <tr><td style="background:#0b0b0c;padding:14px 28px;font:12px Arial,sans-serif;color:#b8b3a6">Sent from the contact form at <a href="https://rlfsecurity.com" style="color:#c9a227">rlfsecurity.com</a></td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+}
 
 async function handleContact(request, env) {
   let f;
@@ -58,6 +103,7 @@ async function handleContact(request, env) {
     `Reply to this email to answer ${name} directly.`
   ].join('\r\n');
 
+  const boundary = `rlf-${crypto.randomUUID()}`;
   const raw = [
     `From: ${encodeWord(FROM_NAME)} <${FROM}>`,
     `To: <${shownTo}>`,
@@ -66,10 +112,20 @@ async function handleContact(request, env) {
     `Date: ${new Date().toUTCString()}`,
     `Message-ID: <${crypto.randomUUID()}@rlfsecurity.com>`,
     `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    ``,
+    `--${boundary}`,
     `Content-Type: text/plain; charset=utf-8`,
     `Content-Transfer-Encoding: base64`,
     ``,
-    b64(body).replace(/.{76}/g, '$&\r\n')
+    wrap76(b64(body)),
+    `--${boundary}`,
+    `Content-Type: text/html; charset=utf-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    wrap76(b64(requestHtml({ name, email, org, phone, need, message }))),
+    `--${boundary}--`,
+    ``
   ].join('\r\n');
 
   try {
