@@ -147,6 +147,9 @@ input[type=password],input[type=datetime-local]{font:inherit;color:inherit}
 .guide table.gtbl{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 14px}.guide .gtbl th,.guide .gtbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:normal}
 @media print{ body>*:not(#sheet){display:none!important} #sheet{position:static;background:none;display:block} #sheet>div{max-height:none;overflow:visible;border-radius:0;padding:0;max-width:none;color:#000;background:#fff}
   #sheet .bar,#sheet .actions{display:none!important} #sheet .help{color:#333} }
+.webphotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.webphoto img,.webphoto-empty{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;margin-bottom:6px}
+.webphoto-empty{display:flex;align-items:center;justify-content:center;color:var(--muted,#667);font-size:14px;background:var(--bg,#f5f7f9)}
 </style>
 </head>
 <body>
@@ -195,6 +198,7 @@ input[type=password],input[type=datetime-local]{font:inherit;color:inherit}
   <section id="v-filings" hidden></section>
   <section id="v-books" hidden></section>
   <section id="v-guide" hidden></section>
+  <section id="v-website" hidden></section>
 </main>
 <nav class="tabs" aria-label="Sections"></nav>
 </div>
@@ -226,6 +230,7 @@ input[type=password],input[type=datetime-local]{font:inherit;color:inherit}
 <script src="js/books.js"></script>
 <script src="js/guide.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/website.js"></script>
 <script src="js/shell.js"></script>
 </body>
 </html>

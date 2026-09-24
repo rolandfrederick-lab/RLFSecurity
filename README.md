@@ -21,6 +21,9 @@ https://rlfsecurity.com/app/ and linked as "Staff login" in the footer. It runs 
 security company's own Supabase project, whose database setup lives in `supabase/migrations/`.
 See `payroll/README.md` and `payroll/SETUP.md`.
 
+Owners edit the website's photos, prices and contact details from the app (More, Website);
+`public/js/content.js` loads them into the pages.
+
 ## Animations
 
 - `public/js/silk.js`: animated gold silk background (behind the whole home page).

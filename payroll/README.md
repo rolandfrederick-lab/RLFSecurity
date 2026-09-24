@@ -15,4 +15,13 @@ Supabase project, so the two companies' data stay separate.
 - `payroll/SETUP.md`: full setup and first-run guide.
 - `payroll/tests/sql/`: database tests carried over from the original app.
 
+## Website editing
+
+Owners (and administrators) get **More, Website** in the app. It edits the public site's
+contact details, home page notice, credentials, About page text and photos, training
+prices and dates, and the photo galleries. Text is stored in the `website` table and
+photos in the public `website` storage bucket (`supabase/migrations/20260924200000_website_content.sql`);
+`public/js/content.js` fills them into the pages, and anything left empty keeps the
+page's built-in text.
+
 Never put a Supabase secret key (`sb_secret_...`) or database password in this repository.

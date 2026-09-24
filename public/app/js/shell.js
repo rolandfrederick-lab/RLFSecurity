@@ -14,7 +14,7 @@ function tabsFor() {
   if (isContractor()) return [["invoices", "Invoices"], ["mypay", "My pay"], ["more", "More"]];
   return [["clock", "Clock"], ["hours", "My hours"], ["timeoff", "Time off"], ["mypay", "My pay"], ["more", "More"]];
 }
-const SUBVIEWS = ["workers", "sites", "people", "settings", "schedule", "filings", "books", "guide"];
+const SUBVIEWS = ["workers", "sites", "people", "settings", "schedule", "filings", "books", "guide", "website"];
 function render() {
   if (!S.me) return;
   $("#biz").textContent = S.cfg.businessName || "Payroll";
@@ -35,7 +35,7 @@ function render() {
   nav.innerHTML = tabs.map(t => `<button data-tab="${t[0]}" aria-current="${t[0] === cur ? "page" : "false"}"><svg viewBox="0 0 24 24">${ICONS[t[0]]}</svg>${t[1]}</button>`).join("");
   document.querySelectorAll("#app main > section").forEach(x => x.hidden = x.id !== "v-" + S.tab);
   ({ clock: renderClock, hours: renderHours, timeoff: renderTimeoff, mypay: renderMyPay, team: renderTeam, run: renderRun, history: renderHistory, taxes: renderTaxes,
-     more: renderMore, workers: renderWorkers, sites: renderSites, people: renderPeople, settings: renderSettings, schedule: renderSchedule, filings: renderFilings, books: renderBooks, guide: renderGuide, invoices: renderInvoices })[S.tab]();
+     more: renderMore, workers: renderWorkers, sites: renderSites, people: renderPeople, settings: renderSettings, schedule: renderSchedule, filings: renderFilings, books: renderBooks, guide: renderGuide, invoices: renderInvoices, website: renderWebsite })[S.tab]();
 }
 function go(tab) { S.tab = tab; window.scrollTo(0, 0); render(); softRefresh(); }
 /* Reload data in the background without disturbing what the user is doing. Also checks for a new app version. */
@@ -64,6 +64,7 @@ function renderMore() {
     ["people", "People and roles", `${S.people.filter(p => !p.active).length} waiting for approval`], ["settings", "Settings", "Time clock rules and tax rates"]);
     if (S.me.worker_id) items.push(["clock", "Clock in or out", "Your own time clock"], ["hours", "My hours", "Your own shifts"], ["timeoff", "Time off", "Your own sick time"], ["mypay", "My pay", "Your own pay stubs"]); }
   if (isMgr()) items.splice(1, 0, ["books", "Books", "Money in, money out, profit by site"], ["filings", "Tax filings", "941, 940, W-2, 1099, Michigan and city forms"]);
+  if (isOwner()) items.push(["website", "Website", "Photos, prices and contact details on rlfsecurity.com"]);
   items.push(["guide", "Guide", "How everything works and when to do what"]);
   if (S.me.worker_id) items.push(["paperwork", "My tax paperwork", needsPaperwork() ? "Not done yet" : "W-4, address, Social Security number"]);
   $("#v-more").innerHTML = `<h2>More</h2>${items.length ? `<ul class="list morelist">${items.map(i => `<li><button class="rowbtn" ${i[0] === "paperwork" ? "data-paper=1" : `data-tab="${i[0]}"`}><span class="main"><b>${i[1]}</b><small>${esc(i[2])}</small></span></button></li>`).join("")}</ul>` : ""}

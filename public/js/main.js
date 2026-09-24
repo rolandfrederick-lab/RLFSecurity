@@ -34,10 +34,12 @@
       data.get('message')
     ].join('\n');
 
-    window.location.href = 'mailto:' + TO +
+    var to = (window.SITE_CONTENT && window.SITE_CONTENT.email) || TO;
+    window.location.href = 'mailto:' + to +
       '?subject=' + encodeURIComponent('Website request: ' + need) +
       '&body=' + encodeURIComponent(body);
 
-    status.textContent = 'Your email app should open with your request. If it does not, call 313-693-5829.';
+    var phone = (window.SITE_CONTENT && window.SITE_CONTENT.phone) || '313-693-5829';
+    status.textContent = 'Your email app should open with your request. If it does not, call ' + phone + '.';
   });
 })();

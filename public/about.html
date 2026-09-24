@@ -40,21 +40,21 @@
           <div class="eyebrow">About</div>
           <h1 style="font-size: clamp(34px, 5vw, 52px); line-height: 1.1">A Detroit security company built on discipline</h1>
           <p>R L Frederick Private Security &amp; Weapon Safety provides licensed security services and certified firearms instruction to metro Detroit. We believe good security is quiet, consistent and accountable, and that anyone who carries a weapon should be trained to handle it safely.</p>
-          <p>[COMPANY HISTORY: when the company was founded, why, and the kinds of clients served since.]</p>
+          <p class="multiline" data-c="history">[COMPANY HISTORY: when the company was founded, why, and the kinds of clients served since.]</p>
         </div>
-        <div class="photo photo-dark">[PHOTO: TEAM OR FACILITY]</div>
+        <div class="photo photo-dark" data-photo="aboutTeam" data-photo-alt="The R L Frederick team">[PHOTO: TEAM OR FACILITY]</div>
       </div>
     </section>
 
     <section class="light">
       <div class="container split">
-        <div class="photo photo-light">[PHOTO: ROLAND L. FREDERICK]</div>
+        <div class="photo photo-light" data-photo="aboutOwner" data-photo-alt="Roland L. Frederick">[PHOTO: ROLAND L. FREDERICK]</div>
         <div class="leader">
           <div class="eyebrow">Leadership</div>
           <h2>Roland L. Frederick</h2>
           <div class="role">Chief Executive Officer</div>
-          <p>[BIO: background in security or law enforcement, years of experience, instructor certifications, and what led to founding the company.]</p>
-          <div class="contact-line"><a href="tel:+13136935829">313-693-5829</a><a href="mailto:rolandfrederick@gmail.com">rolandfrederick@gmail.com</a></div>
+          <p class="multiline" data-c="bio">[BIO: background in security or law enforcement, years of experience, instructor certifications, and what led to founding the company.]</p>
+          <div class="contact-line"><a href="tel:+13136935829" data-c="phone" data-c-link="tel">313-693-5829</a><a href="mailto:rolandfrederick@gmail.com" data-c="email" data-c-link="mailto">rolandfrederick@gmail.com</a></div>
         </div>
       </div>
     </section>
@@ -66,7 +66,7 @@
           <h2>What every client can expect</h2>
         </div>
         <div class="grid grid-3">
-          <div class="stat"><strong>Licensed &amp; Insured</strong><span>State of Michigan licensed. License No. [NUMBER]. Insurance certificates provided on request.</span></div>
+          <div class="stat"><strong>Licensed &amp; Insured</strong><span>State of Michigan licensed. License No. <span data-c="licenseNumber">[NUMBER]</span>. Insurance certificates provided on request.</span></div>
           <div class="stat"><strong>Trained Officers</strong><span>Every officer is vetted, trained in-house and held to written post orders.</span></div>
           <div class="stat"><strong>Direct Accountability</strong><span>You have a direct line to ownership, not a call center.</span></div>
         </div>
@@ -88,7 +88,7 @@
       <div class="footer-info">
         <div class="footer-name">R L FREDERICK PRIVATE SECURITY &amp; WEAPON SAFETY</div>
         <div>Roland L. Frederick, Chief Executive Officer</div>
-        <div><a href="tel:+13136935829">313-693-5829</a> · <a href="mailto:rolandfrederick@gmail.com">rolandfrederick@gmail.com</a></div>
+        <div><a href="tel:+13136935829" data-c="phone" data-c-link="tel">313-693-5829</a> · <a href="mailto:rolandfrederick@gmail.com" data-c="email" data-c-link="mailto">rolandfrederick@gmail.com</a></div>
         <div>Detroit, Michigan</div>
       </div>
       <nav class="footer-links" aria-label="Footer">
@@ -101,6 +101,8 @@
     </div>
   </footer>
 
+  <script src="app/config.js"></script>
+  <script src="js/content.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

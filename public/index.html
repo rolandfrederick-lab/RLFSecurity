@@ -39,6 +39,7 @@
   </header>
 
   <main>
+    <div class="site-notice" id="site-notice" hidden><div class="container"><span data-c="notice"></span></div></div>
     <section class="hero">
       <div class="container">
         <div class="hero-text">
@@ -107,62 +108,62 @@
         <div class="accordion-gallery" data-accordion data-default="2" role="list" aria-label="Security photos">
           <div class="ag-panel" tabindex="0" role="listitem" aria-label="On Post">
             <span class="ag-panel__frame">
-              <span class="ag-panel__media">
+              <span class="ag-panel__media" data-photo="home1" data-photo-alt="On Post" data-photo-alt-key="homeCaption1">
                 <span class="ag-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>[PHOTO: OFFICER ON POST]</span>
               </span>
               <span class="ag-panel__overlay" aria-hidden="true"></span>
             </span>
             <span class="ag-panel__label" aria-hidden="true">
               <span class="ag-panel__bar"></span>
-              <span class="ag-panel__text">On Post</span>
+              <span class="ag-panel__text" data-c="homeCaption1">On Post</span>
             </span>
           </div>
           <div class="ag-panel" tabindex="0" role="listitem" aria-label="Access Control">
             <span class="ag-panel__frame">
-              <span class="ag-panel__media">
+              <span class="ag-panel__media" data-photo="home2" data-photo-alt="Access Control" data-photo-alt-key="homeCaption2">
                 <span class="ag-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>[PHOTO: LOBBY OR ENTRY CHECKPOINT]</span>
               </span>
               <span class="ag-panel__overlay" aria-hidden="true"></span>
             </span>
             <span class="ag-panel__label" aria-hidden="true">
               <span class="ag-panel__bar"></span>
-              <span class="ag-panel__text">Access Control</span>
+              <span class="ag-panel__text" data-c="homeCaption2">Access Control</span>
             </span>
           </div>
           <div class="ag-panel" tabindex="0" role="listitem" aria-label="Event Coverage">
             <span class="ag-panel__frame">
-              <span class="ag-panel__media">
+              <span class="ag-panel__media" data-photo="home3" data-photo-alt="Event Coverage" data-photo-alt-key="homeCaption3">
                 <span class="ag-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>[PHOTO: EVENT SECURITY TEAM]</span>
               </span>
               <span class="ag-panel__overlay" aria-hidden="true"></span>
             </span>
             <span class="ag-panel__label" aria-hidden="true">
               <span class="ag-panel__bar"></span>
-              <span class="ag-panel__text">Event Coverage</span>
+              <span class="ag-panel__text" data-c="homeCaption3">Event Coverage</span>
             </span>
           </div>
           <div class="ag-panel" tabindex="0" role="listitem" aria-label="Mobile Patrol">
             <span class="ag-panel__frame">
-              <span class="ag-panel__media">
+              <span class="ag-panel__media" data-photo="home4" data-photo-alt="Mobile Patrol" data-photo-alt-key="homeCaption4">
                 <span class="ag-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>[PHOTO: PATROL VEHICLE]</span>
               </span>
               <span class="ag-panel__overlay" aria-hidden="true"></span>
             </span>
             <span class="ag-panel__label" aria-hidden="true">
               <span class="ag-panel__bar"></span>
-              <span class="ag-panel__text">Mobile Patrol</span>
+              <span class="ag-panel__text" data-c="homeCaption4">Mobile Patrol</span>
             </span>
           </div>
           <div class="ag-panel" tabindex="0" role="listitem" aria-label="Training">
             <span class="ag-panel__frame">
-              <span class="ag-panel__media">
+              <span class="ag-panel__media" data-photo="home5" data-photo-alt="Training" data-photo-alt-key="homeCaption5">
                 <span class="ag-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>[PHOTO: RANGE OR CLASSROOM]</span>
               </span>
               <span class="ag-panel__overlay" aria-hidden="true"></span>
             </span>
             <span class="ag-panel__label" aria-hidden="true">
               <span class="ag-panel__bar"></span>
-              <span class="ag-panel__text">Training</span>
+              <span class="ag-panel__text" data-c="homeCaption5">Training</span>
             </span>
           </div>
         </div>
@@ -173,10 +174,10 @@
       <div class="container">
         <div class="section-head"><div class="eyebrow">Credentials</div></div>
         <div class="grid grid-4">
-          <div class="stat"><strong>[LICENSE TYPE]</strong><span>State of Michigan License No. [NUMBER]</span></div>
+          <div class="stat"><strong data-c="licenseType">[LICENSE TYPE]</strong><span>State of Michigan License No. <span data-c="licenseNumber">[NUMBER]</span></span></div>
           <div class="stat"><strong>Insured &amp; Bonded</strong><span>Coverage details available on request</span></div>
-          <div class="stat"><strong>[INSTRUCTOR CERTIFICATION]</strong><span>Certified firearms instructor</span></div>
-          <div class="stat"><strong>[YEARS] Years</strong><span>Serving metro Detroit</span></div>
+          <div class="stat"><strong data-c="instructorCert">[INSTRUCTOR CERTIFICATION]</strong><span>Certified firearms instructor</span></div>
+          <div class="stat"><strong><span data-c="years">[YEARS]</span> Years</strong><span>Serving metro Detroit</span></div>
         </div>
       </div>
     </section>
@@ -185,7 +186,7 @@
       <div class="container">
         <div class="cta-text">
           <h2>Need coverage or a consultation?</h2>
-        <p>Call <a href="tel:+13136935829">313-693-5829</a> or send a request and we will respond within one business day.</p>
+        <p>Call <a href="tel:+13136935829" data-c="phone" data-c-link="tel">313-693-5829</a> or send a request and we will respond within one business day.</p>
         </div>
         <a class="btn btn-dark" href="contact.html">Contact Us</a>
       </div>
@@ -197,7 +198,7 @@
       <div class="footer-info">
         <div class="footer-name">R L FREDERICK PRIVATE SECURITY &amp; WEAPON SAFETY</div>
         <div>Roland L. Frederick, Chief Executive Officer</div>
-        <div><a href="tel:+13136935829">313-693-5829</a> · <a href="mailto:rolandfrederick@gmail.com">rolandfrederick@gmail.com</a></div>
+        <div><a href="tel:+13136935829" data-c="phone" data-c-link="tel">313-693-5829</a> · <a href="mailto:rolandfrederick@gmail.com" data-c="email" data-c-link="mailto">rolandfrederick@gmail.com</a></div>
         <div>Detroit, Michigan</div>
       </div>
       <nav class="footer-links" aria-label="Footer">
@@ -210,6 +211,8 @@
     </div>
   </footer>
 
+  <script src="app/config.js"></script>
+  <script src="js/content.js"></script>
   <script src="js/main.js"></script>
   <script src="js/silk.js"></script>
   <script src="js/accordion.js"></script>
