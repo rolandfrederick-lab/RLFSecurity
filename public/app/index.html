@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RLF Payroll">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#14213D">
+<title>RLF Security Payroll and Time Clock</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F9; --surface:#FFFFFF; --ink:#14213D; --muted:#5B6678; --line:#D9DFE7;
+  --accent:#0F6E6A; --accent-ink:#FFFFFF; --accent-soft:#E2F1EF; --warn:#9A5B00; --warn-soft:#FFF3DC;
+  --danger:#B42318; --slip:#FFFDF6; --slip-line:#E6DFC9;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#0F1622; --surface:#182233; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A374B;
+  --accent:#3FB5AC; --accent-ink:#06201E; --accent-soft:#173533; --warn:#F2B75C; --warn-soft:#3A2D12;
+  --danger:#FF8A7A; --slip:#1D2738; --slip-line:#33415A; } }
+:root[data-theme="dark"]{
+  --paper:#0F1622; --surface:#182233; --ink:#E8EDF5; --muted:#9AA6B8; --line:#2A374B;
+  --accent:#3FB5AC; --accent-ink:#06201E; --accent-soft:#173533; --warn:#F2B75C; --warn-soft:#3A2D12;
+  --danger:#FF8A7A; --slip:#1D2738; --slip-line:#33415A; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45;
+  -webkit-text-size-adjust:100%}
+.num{font-variant-numeric:tabular-nums}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:#fff;
+  display:flex;align-items:center;gap:12px;padding:12px 16px}
+:root[data-theme="dark"] header.top{background:#0A101A}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) header.top{background:#0A101A}}
+header.top h1{font-size:17px;font-weight:600;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top select{width:auto;min-height:36px;flex:none;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:6px 8px;font:inherit;font-size:14px}
+header.top select option{color:#14213D}
+header.top .iconbtn{background:transparent;border:1px solid rgba(255,255,255,.35);border-radius:6px;width:36px;min-height:36px;padding:0;display:grid;place-items:center;color:#fff;flex:none}
+header.top .iconbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+header.top .iconbtn.spin svg{animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+#ptr{position:fixed;top:calc(56px + env(safe-area-inset-top,0px));left:50%;transform:translate(-50%,-140%);z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--muted);transition:transform .15s;pointer-events:none}
+#ptr.show{transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){header.top .iconbtn.spin svg{animation:none}}
+main{max-width:720px;margin:0 auto;padding:16px 16px 96px}
+h2{font-size:22px;font-weight:600;margin:4px 0 12px;letter-spacing:-.01em}
+h3{font-size:15px;font-weight:600;margin:20px 0 8px;color:var(--muted)}
+p.help{color:var(--muted);font-size:14px;margin:4px 0 12px;max-width:62ch}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:10px 12px;font-size:14px;margin:0 0 12px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+input,select,textarea,button{font:inherit;color:inherit}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;background:var(--paper);border:1px solid var(--line);
+  border-radius:8px;padding:11px 12px;min-height:46px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}.grid2>div{min-width:0}
+.check{display:flex;gap:10px;align-items:center;margin:12px 0;font-size:15px}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+button.primary{width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:14px;font-weight:600;min-height:50px;margin-top:14px}
+button.primary:disabled{opacity:.45}
+button.ghost{background:transparent;border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-height:44px}
+button.danger{background:transparent;border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:10px 14px;min-height:44px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--paper);padding:12px;min-height:46px}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+/* pay slip: the one expressive element */
+.slip{background:var(--slip);border:1px solid var(--slip-line);border-radius:10px 10px 0 0;padding:14px 14px 0;margin-top:14px;position:relative}
+.slip .row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--slip-line);font-size:15px}
+.slip .row span:first-child{color:var(--muted)}
+.slip .row.gross span{color:var(--ink);font-weight:600}
+.slip .net{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 16px}
+.slip .net b{font-size:30px;font-weight:600;letter-spacing:-.02em}
+.slip::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;
+  background:radial-gradient(circle at 6px 0,var(--slip) 5px,transparent 5.5px) 0 0/12px 8px repeat-x;filter:drop-shadow(0 1px 0 var(--slip-line))}
+.cost{margin-top:22px;font-size:14px;color:var(--muted)}
+.cost b{color:var(--ink)}
+.list{list-style:none;margin:0;padding:0}
+.list li{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+.list li button.rowbtn{display:flex;width:100%;text-align:left;align-items:center;gap:12px;background:none;border:0;padding:13px 14px;min-height:56px}
+.list .main{flex:1;min-width:0}.list .main b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list .main small{color:var(--muted);font-size:13px}
+.tag{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.tag.c{background:var(--warn-soft);color:var(--warn)}
+.empty{color:var(--muted);text-align:center;padding:28px 12px;font-size:15px}
+.tblwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--muted);font-size:13px}
+tr:last-child td{border-bottom:0}
+td .paid{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 10px;font-size:12px;min-height:32px}
+td .paid[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{background:none;border:0;padding:9px 2px 8px;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current=page]{color:var(--accent);font-weight:600}
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,16,26,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:var(--surface);width:100%;max-width:720px;max-height:92%;overflow:auto;border-radius:14px 14px 0 0;
+  padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet .bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sheet .bar h2{margin:0;font-size:19px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:30;
+  background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+[hidden]{display:none!important}
+/* ---- time clock additions ---- */
+.auth{max-width:420px;margin:0 auto;padding:32px 16px}
+.auth h2{font-size:26px;margin-bottom:4px}
+.linkbtn{background:none;border:0;color:var(--accent);padding:10px 0;text-decoration:underline;min-height:44px}
+.clockcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:14px}
+.clockcard .state{font-size:15px;color:var(--muted);margin:0 0 4px}
+.clockcard .big{font-size:40px;font-weight:600;letter-spacing:-.02em;margin:4px 0 2px}
+.clockcard .where{font-size:16px;margin:0 0 14px}
+button.punch{width:100%;border:0;border-radius:12px;padding:20px;font-size:20px;font-weight:600;min-height:68px;background:var(--accent);color:var(--accent-ink)}
+button.punch.out{background:var(--ink);color:var(--paper)}
+button.punch:disabled{opacity:.5}
+.tag.flag{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--accent-soft);color:var(--accent)}
+.tag.no{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.tag.open{background:var(--ink);color:var(--paper)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px;margin:8px 0 4px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;text-align:right}
+.morelist button.rowbtn{font-weight:600}
+.back{background:none;border:0;color:var(--accent);padding:0 0 8px;min-height:40px;font-size:15px}
+.checks{display:grid;gap:2px;margin-top:4px}
+.note{background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:10px 12px;font-size:14px;margin:12px 0 0}
+nav.tabs{grid-template-columns:repeat(var(--tabs,5),1fr)}
+
+input[type=password],input[type=datetime-local]{font:inherit;color:inherit}
+.meter{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:4px}
+.meter div{height:100%;background:var(--accent)}
+.meter.amber div{background:var(--warn)} .meter.red div{background:var(--danger)}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stat div{background:var(--paper);border-radius:8px;padding:10px 6px}.stat b{display:block;font-size:22px;font-weight:600}.stat small{color:var(--muted);font-size:12px}
+.tag.late{background:transparent;border:1px solid var(--warn);color:var(--warn)}
+.guide h2{font-size:19px;margin:26px 0 8px}.guide h3{font-size:15px;color:var(--ink);margin:18px 0 6px}.guide h4{font-size:14px;margin:14px 0 4px}
+.guide p,.guide li{font-size:15px;line-height:1.55;max-width:66ch}.guide ul,.guide ol{padding-left:22px}.guide code{background:var(--accent-soft);border-radius:4px;padding:1px 5px;font-size:13px}
+.guide table.gtbl{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 14px}.guide .gtbl th,.guide .gtbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:normal}
+@media print{ body>*:not(#sheet){display:none!important} #sheet{position:static;background:none;display:block} #sheet>div{max-height:none;overflow:visible;border-radius:0;padding:0;max-width:none;color:#000;background:#fff}
+  #sheet .bar,#sheet .actions{display:none!important} #sheet .help{color:#333} }
+</style>
+</head>
+<body>
+<div id="auth" hidden></div>
+<div id="app" hidden>
+<header class="top"><h1 id="biz">Payroll</h1><select id="year" aria-label="Payroll year"></select><button id="refresh" class="iconbtn" aria-label="Refresh"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button></header>
+<div id="ptr" aria-hidden="true">Release to refresh</div>
+<main>
+  <div id="banners"></div>
+  <section id="v-clock" hidden></section>
+  <section id="v-invoices" hidden></section>
+  <section id="v-hours" hidden></section>
+  <section id="v-timeoff" hidden></section>
+  <section id="v-mypay" hidden></section>
+  <section id="v-team" hidden></section>
+  <section id="v-run" hidden>
+    <h2>Run payroll</h2>
+    <div id="r-none" hidden><p class="empty">Add a worker first, then come back here to pay them.</p><button class="primary" id="r-addw">Add worker</button></div>
+    <div id="r-form">
+      <div class="panel">
+        <div class="grid2"><div><label class="f" for="r-start">Work period starts</label><input id="r-start" type="date"></div>
+        <div><label class="f" for="r-end">Work period ends</label><input id="r-end" type="date"></div>
+        <div><label class="f" for="r-date">Pay date</label><input id="r-date" type="date"></div>
+        <div><label class="f" for="r-worker">Worker</label><select id="r-worker"></select></div></div>
+        <div id="r-cpanel"></div>
+        <div id="r-pull"></div>
+        <div class="grid2" id="r-hourly"><div><label class="f" for="r-reg">Regular hours</label><input id="r-reg" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></div>
+        <div><label class="f" for="r-ot">Overtime hours</label><input id="r-ot" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></div>
+        <div><label class="f" for="r-sick">Sick hours</label><input id="r-sick" type="number" inputmode="decimal" min="0" step="0.25" placeholder="0"></div>
+        <div><label class="f" for="r-guar">Guaranteed hours</label><input id="r-guar" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></div></div>
+        <div class="grid2"><div><label class="f" for="r-other">Flat or other pay ($)</label><input id="r-other" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div>
+        <div><label class="f" for="r-ded">Other deductions ($)</label><input id="r-ded" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"></div></div>
+        <div id="r-preview"></div>
+        <button class="primary" id="r-save" disabled>Save paycheck</button>
+      </div>
+    </div>
+  </section>
+  <section id="v-history" hidden><h2>Paychecks</h2><div id="h-list"></div><button class="ghost" id="h-export" hidden>Export the year as a spreadsheet (CSV)</button></section>
+  <section id="v-taxes" hidden><h2>Taxes owed</h2><div id="t-body"></div></section>
+  <section id="v-more" hidden></section>
+  <section id="v-workers" hidden></section>
+  <section id="v-sites" hidden></section>
+  <section id="v-people" hidden></section>
+  <section id="v-settings" hidden></section>
+  <section id="v-schedule" hidden></section>
+  <section id="v-filings" hidden></section>
+  <section id="v-books" hidden></section>
+  <section id="v-guide" hidden></section>
+</main>
+<nav class="tabs" aria-label="Sections"></nav>
+</div>
+<div id="sheet" class="sheet" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="js/payroll.js"></script>
+<script src="js/state.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/clock.js"></script>
+<script src="js/invoices.js"></script>
+<script src="js/jobs.js"></script>
+<script src="js/timeoff.js"></script>
+<script src="js/team.js"></script>
+<script src="js/pay.js"></script>
+<script src="js/statement.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/schedule.js"></script>
+<script src="js/onboarding.js"></script>
+<script src="js/forms-pdf.js"></script>
+<script src="js/forms-fed.js"></script>
+<script src="js/forms-w2.js"></script>
+<script src="js/forms-mi.js"></script>
+<script src="js/yearend.js"></script>
+<script src="js/reminders.js"></script>
+<script src="js/books.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+/* ================= Tax filings screen (managers) ================= */
+const FQ = { year: null, quarter: null };
+const FORM_INFO = [
+  ["Federal tax deposits (EFTPS)", "Every paycheck, you hold back the worker's federal income tax and their half of Social Security and Medicare, and you owe the matching employer half. The IRS wants that money monthly (or twice weekly once you owe over $50,000 a year), through its free EFTPS website. Late deposits carry a 2% to 15% penalty, so this is the one that matters most."],
+  ["Form 941, Employer's Quarterly Federal Tax Return", "The quarterly report that tells the IRS what you withheld and what you deposited, so the deposits can be matched to the return. It is a report, not a payment; a balance shows only if deposits fell short. Filed for every quarter you had employees, even a quarter with no wages once you are registered."],
+  ["Form 940, Federal Unemployment (FUTA)", "Once a year, the federal unemployment tax: 0.6% of the first $7,000 paid to each employee, employer-only, nothing withheld from workers. It funds the federal side of unemployment benefits. If the amount owed passes $500 during the year you deposit it quarterly; otherwise you pay it with the form."],
+  ["Form W-2 and the SSA wage file", "Each employee's annual statement of wages and taxes withheld. The worker uses it to file their own tax return, and the Social Security Administration uses it to credit their earnings record. You give each worker their copies by January 31 and send the same data to SSA, which passes it to the IRS. The file the app builds replaces the paper W-3 summary."],
+  ["Form 1099-NEC and the IRIS upload", "The contractor equivalent of a W-2, required for anyone not on payroll you paid $2,000 or more in the year. It reports the money to the IRS so the contractor pays their own taxes. Copies to the contractor and the IRS by January 31. Uploading through IRIS replaces the paper 1096 summary."],
+  ["Michigan withholding and Form 5081", "Michigan income tax you hold back from wages goes to the state monthly (or quarterly if small) through Michigan Treasury Online. Form 5081 is the once-a-year reconciliation that shows total wages, total withheld, and total paid, so the state can confirm the deposits matched. Due February 28."],
+  ["Michigan UIA quarterly wage report", "The state unemployment tax, paid by the employer only, at the rate on your annual UIA rate notice. Each quarter you report every employee's wages (that is the file the app builds) and pay the tax on the first $9,500 per worker. This is what funds unemployment benefits if you ever lay someone off, and it is what the FUTA credit depends on."],
+  ["City income tax", "Twenty-four Michigan cities tax wages: residents on everything they earn, nonresidents on work done inside the city. You withhold it per paycheck, pay each city (Detroit through Michigan Treasury Online), and reconcile once a year. The app figures it from where the worker lives and where the site is."],
+  ["Paperwork you keep", "Signed W-4 and MI-W4 from every worker (the app collects them electronically), an I-9 for each employee within three days of hire (paper, with ID checked in person), a W-9 from each contractor, and the sick time policy acknowledgement. Keep payroll records four years, time records three."]];
+function renderFilings() {
+  const v = $("#v-filings"), b = biz(), y = FQ.year || S.year, q = FQ.quarter || Math.min(4, quarterOf(todayStr())), missing = ["legalName", "ein", "street", "city", "zip", "contactName"].filter(k => !b[k]);
+  const canSsn = S.me.role === "owner" || S.me.is_admin;
+  v.innerHTML = `${backMore}<h2>Tax filings</h2>${renderTodos()}
+    ${missing.length ? `<div class="banner">Fill in the business details in Settings first: ${missing.join(", ")}.</div>` : ""}
+    ${canSsn ? "" : `<div class="banner">Only an owner or administrator can produce forms with full Social Security numbers. Yours will show the last four digits only.</div>`}
+    <div class="panel"><div class="grid2"><div><label class="f" for="fy">Year</label><select id="fy">${[y - 1, y, y + 1].map(x => `<option ${x === y ? "selected" : ""}>${x}</option>`).join("")}</select></div>
+    <div><label class="f" for="fq">Quarter</label><select id="fq">${[1, 2, 3, 4].map(x => `<option value="${x}" ${x === q ? "selected" : ""}>Q${x}, ${["Jan to Mar", "Apr to Jun", "Jul to Sep", "Oct to Dec"][x - 1]}</option>`).join("")}</select></div></div>
+    <p class="help num" id="f-sched">Checking the federal deposit schedule</p></div>
+    <h3>What these forms are</h3><div class="panel">${FORM_INFO.map(f => `<details style="margin:4px 0"><summary style="cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center">${f[0]}</summary><p class="help" style="margin:6px 0 10px">${f[1]}</p></details>`).join("")}</div>
+    <h3>Every quarter</h3><div class="panel">
+    <p class="help"><b>Form 941</b>, due the last day of the month after the quarter. Print, sign, mail. Deposits go through EFTPS on the schedule above.</p><button class="ghost" data-form="941">Form 941 for Q${q} ${y} (PDF)</button>
+    <p class="help" style="margin-top:14px"><b>Michigan UIA wage report</b>, due the 25th of the month after the quarter. Upload this file in MiUI under Wage Detail Reporting, then pay the tax it computes.</p><button class="ghost" data-form="miui">UIA wage file for Q${q} ${y} (.txt)</button></div>
+    <h3>Every year, by January 31</h3><div class="panel">
+    <p class="help"><b>W-2s.</b> Give each employee their copies, then upload the file to SSA Business Services Online (Wage File Upload). Run it through AccuWage Online first; it is free and catches format errors. No W-3 is needed when you upload.</p>
+    <div class="actions"><button class="ghost" data-form="w2pdf">Employee W-2 copies (PDF)</button><button class="ghost" data-form="efw2">SSA W-2 file (.txt)</button><button class="ghost" data-form="w2csv">W-2 totals for keying (CSV)</button></div>
+    <p class="help" style="margin-top:14px"><b>1099-NECs</b> for contractors paid ${usd(S.cfg.necThreshold)} or more. Give each their copy, then upload the CSV in the IRS IRIS portal. No 1096 is needed when you upload.</p>
+    <div class="actions"><button class="ghost" data-form="1099pdf">Contractor 1099-NEC copies (PDF)</button><button class="ghost" data-form="iris">IRIS upload file (.csv)</button></div>
+    <p class="help" style="margin-top:14px"><b>Form 940</b>, federal unemployment. Print, sign, mail.</p><label class="f" for="f-futa">FUTA already deposited this year ($)</label><input id="f-futa" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00"><button class="ghost" data-form="940" style="margin-top:8px">Form 940 for ${y} (PDF)</button></div>
+    <h3>Every year, by February 28</h3><div class="panel">
+    <p class="help"><b>Michigan Form 5081</b>, the annual withholding reconciliation. File on Michigan Treasury Online or print, sign and mail. The sales and use tax parts stay blank unless you also collect sales tax.</p><button class="ghost" data-form="5081">Form 5081 for ${y} (PDF)</button>
+    <p class="help" style="margin-top:14px"><b>City reconciliations.</b> One page per city with tax withheld: Detroit files on MTO (Form 5321), other cities on their own form. The page has every number they ask for.</p><button class="ghost" data-form="city">City reconciliation pages for ${y} (PDF)</button></div>
+    <p class="help">Every download is built from saved paychecks only. Amounts owed on the forms assume the deposits marked Paid on the Taxes tab were made for the amounts shown there. Have a CPA look over the first year.</p>`;
+  $("#fy").onchange = () => { FQ.year = Number($("#fy").value); renderFilings(); }; $("#fq").onchange = () => { FQ.quarter = Number($("#fq").value); renderFilings(); };
+  depositSchedule(y).then(s => { const el = $("#f-sched"); if (el) el.textContent = `Federal deposit schedule for ${y}: ${s.schedule} (lookback liability ${usd(s.lookback)}${s.schedule === "monthly" ? ", under $50,000" : ", over $50,000"}). ${s.schedule === "monthly" ? "Deposit by the 15th of the following month." : "Deposit by the Wednesday or Friday after payday."} A liability of $100,000 or more on any day must be deposited the next business day.`; });
+  document.querySelectorAll("[data-form]").forEach(btn => btn.onclick = () => runForm(btn.dataset.form, y, q, btn)); wireTodos();
+}
+
+async function runForm(kind, year, quarter, btn) {
+  btn.disabled = true; const label = btn.textContent; btn.textContent = "Building";
+  try {
+    const rows = await loadYearChecks(year), deposits = await loadDeposits(year), ids = [...new Set(rows.map(c => c.worker_id))], b = biz(), stem = `${(b.legalName || "payroll").replace(/[^a-z0-9]+/gi, "-")}-${year}`;
+    if (!rows.length) throw new Error(`No paychecks saved for ${year}.`);
+    const needId = ["w2pdf", "efw2", "w2csv", "1099pdf", "iris", "miui", "city"].includes(kind), idn = needId ? await loadIdentities(ids, `${kind} ${year}`) : { details: {}, ssns: {} };
+    if (needId) { const noSsn = ids.filter(id => !idn.ssns[id] && !(idn.details[id] || {}).has_ssn); if (noSsn.length) toast(`${noSsn.length} worker${noSsn.length === 1 ? " has" : "s have"} no Social Security number on file yet.`); }
+    if (kind === "941") { const s = await depositSchedule(year), r = await build941(year, quarter, rows, deposits, s.schedule); await savePdf(r.doc, `941-Q${quarter}-${stem}.pdf`); toast(`941 built: ${r.summary.employees} employees, ${usd(r.summary.wages)} wages, ${usd(r.summary.l12)} tax, ${usd(r.summary.balance)} balance due.`); }
+    else if (kind === "940") { const r = await build940(year, rows, num($("#f-futa").value)); await savePdf(r.doc, `940-${stem}.pdf`); toast(`940 built: ${usd(r.summary.taxable)} taxable, ${usd(r.summary.tax)} FUTA tax, ${usd(r.summary.balance)} due.`); }
+    else if (kind === "5081") { const r = await build5081(year, rows, deposits); await savePdf(r.doc, `MI-5081-${stem}.pdf`); toast(`5081 built: ${usd(r.summary.withheld)} withheld, ${usd(r.summary.paid)} paid, ${usd(r.summary.balance)} due.`); }
+    else if (kind === "w2pdf" || kind === "efw2" || kind === "w2csv") { const recs = w2Records(rows, idn.details, idn.ssns); if (!recs.length) throw new Error("No W-2 employees paid this year.");
+      if (kind === "w2pdf") await savePdf(await buildW2Pdf(recs, year), `W-2-copies-${stem}.pdf`);
+      else if (kind === "efw2") { if (!(S.me.role === "owner" || S.me.is_admin)) throw new Error("Only an owner or administrator can build the SSA file."); downloadBytes(`W2REPORT-${stem}.txt`, "text/plain", efw2(recs, year)); }
+      else { const qq = v => `"${String(v ?? "").replace(/"/g, '""')}"`; const head = ["Employee", "SSN", "Address", "City", "State", "ZIP", "Box 1 wages", "Box 2 federal", "Box 3 SS wages", "Box 4 SS tax", "Box 5 Medicare wages", "Box 6 Medicare tax", "Box 16 MI wages", "Box 17 MI tax", "Box 18 local wages", "Box 19 local tax", "Box 20 locality"];
+        download(`W-2-keying-${stem}.csv`, "text/csv", [head, ...recs.map(r => [r.legal, r.ssnShown, r.street, r.city, r.addrState, r.zip, money2(r.gross), money2(r.fed), money2(r.ss_wages), money2(r.ss), money2(r.med_wages), money2(r.med), money2(r.gross), money2(r.state), r.localities[0] ? money2(r.localities[0].wages) : "", r.localities[0] ? money2(r.localities[0].tax) : "", r.localities[0] ? r.localities[0].name : ""])].map(x => x.map(qq).join(",")).join("\r\n")); }
+      toast(`${recs.length} W-2${recs.length === 1 ? "" : "s"} built.`); }
+    else if (kind === "1099pdf" || kind === "iris") { const recs = necRecords(rows, idn.details, idn.ssns, S.cfg.necThreshold); if (!recs.length) throw new Error(`No contractors paid ${usd(S.cfg.necThreshold)} or more this year.`);
+      if (kind === "1099pdf") await savePdf(await build1099Pdf(recs, year), `1099-NEC-copies-${stem}.pdf`); else download(`IRIS-1099-NEC-${stem}.csv`, "text/csv", irisCsv(recs, year)); toast(`${recs.length} 1099-NEC${recs.length === 1 ? "" : "s"} built.`); }
+    else if (kind === "miui") { if (!b.uiaAccount) throw new Error("Enter the UIA employer account number in Settings first."); download(`UIA-wages-Q${quarter}-${stem}.txt`, "text/plain", miuiDelimited(year, quarter, rows, idn.details, idn.ssns)); toast("UIA wage file built."); }
+    else if (kind === "city") { const d = await buildCityRecon(year, rows, idn.details, idn.ssns); if (!d) throw new Error("No city tax was withheld this year."); await savePdf(d, `City-reconciliations-${stem}.pdf`); toast("City pages built."); }
+  } catch (e) { fail(e); }
+  btn.disabled = false; btn.textContent = label;
+}

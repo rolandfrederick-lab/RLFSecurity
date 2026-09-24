@@ -14,6 +14,12 @@ The website files are in `public/`.
 
 Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 
+## Staff payroll and time clock
+
+`public/app/` is the staff payroll and GPS time clock, published at
+https://rlfsecurity.com/app/ and linked as "Staff login" in the footer. It runs on the
+security company's own Supabase project. See `payroll/README.md` and `payroll/SETUP.md`.
+
 ## Animations
 
 - `public/js/silk.js`: animated gold silk background (behind the whole home page).

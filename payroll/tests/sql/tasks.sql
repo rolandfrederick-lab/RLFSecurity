@@ -1,0 +1,20 @@
+begin;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-000000000002', 'ana@test');
+insert into public.workers (id, name, hire_date) values ('10000000-0000-0000-0000-000000000001', 'Ana', current_date - 200);
+update public.profiles set active = true, worker_id = '10000000-0000-0000-0000-000000000001' where id = '00000000-0000-0000-0000-000000000002';
+insert into public.sites (id, name) values ('20000000-0000-0000-0000-000000000001', 'Office');
+insert into public.site_tasks (id, site_id, title) values ('50000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 'Vacuum');
+insert into public.punches (id, worker_id, site_id, clock_in, status) values ('30000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', now(), 'open');
+insert into public.punches (id, worker_id, site_id, clock_in, clock_out, status) values ('30000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', now() - interval '2 days', now() - interval '2 days' + interval '3 hours', 'approved');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-000000000002","role":"authenticated"}';
+select public.set_task_done('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', true);
+do $$ begin
+  assert (select count(*) from public.task_checks) = 1, 'ticked';
+  begin perform public.set_task_done('30000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', true); raise exception 'should refuse';
+  exception when others then assert sqlerrm like 'Tasks can only be checked while%', sqlerrm; end;
+end $$;
+select public.set_task_done('30000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', false);
+do $$ begin assert (select count(*) from public.task_checks) = 0, 'unticked'; end $$;
+select 'tasks.sql passed' as result;
+rollback;

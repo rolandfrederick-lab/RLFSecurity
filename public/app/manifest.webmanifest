@@ -1,0 +1,21 @@
+{
+ "name": "RLF Security Payroll",
+ "short_name": "RLF Payroll",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#F5F7F9",
+ "theme_color": "#14213D",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}
