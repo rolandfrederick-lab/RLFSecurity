@@ -4,6 +4,8 @@ Website for R L Frederick Private Security & Weapon Safety, Detroit, Michigan.
 
 ## Pages
 
+The website files are in `public/`.
+
 - `index.html`: Home
 - `services.html`: Security services
 - `training.html`: Weapon safety training courses
@@ -14,7 +16,7 @@ Shared styles are in `css/styles.css` and scripts in `js/main.js`.
 
 ## Viewing locally
 
-Open `index.html` in a browser. No build step is needed.
+Open `public/index.html` in a browser. No build step is needed.
 
 ## Contact form
 
@@ -30,5 +32,6 @@ Search the pages for text in square brackets, such as `[PRICE]`,
 
 ## Publishing
 
-The site is plain HTML and CSS, so it can be hosted on GitHub Pages, Netlify
-or any web host by uploading these files.
+The site is hosted on Cloudflare Workers at rlfsecurity.com. `wrangler.jsonc`
+tells Cloudflare to serve the files in `public/`. Every push to the production
+branch deploys automatically.
