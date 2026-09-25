@@ -180,25 +180,48 @@ function siteSheet(id) {
 function renderPeople() {
   const ps = [...S.people].sort((a, b) => (a.active ? 1 : 0) - (b.active ? 1 : 0) || (a.full_name || "").localeCompare(b.full_name || ""));
   $("#v-people").innerHTML = `${backMore}<h2>People and roles</h2><p class="help">Everyone who created an account. Approve new people, pick their role, and link each login to a worker so they can clock in.</p><ul class="list">` +
-    ps.map(p => `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}</small></span><span class="tag ${p.active ? "" : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span></button></li>`).join("") + `</ul>`;
+    ps.map(p => `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}</small></span>${readyToHire(p) ? `<span class="tag c">Ready to approve</span>` : `<span class="tag ${p.active ? "" : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span>`}</button></li>`).join("") + `</ul>`;
 }
+/* Signed their paperwork at sign-up and has no worker record yet: one form approves them. */
+const readyToHire = p => !p.worker_id && (S.pendingNames || []).some(x => x.profile_id === p.id);
 const roleLabel = p => p.is_admin ? "Administrator" : p.role === "employee" ? workerLabel(p) : ROLE_LABEL[p.role];
 function personSheet(id) {
   const p = S.people.find(x => x.id === id); if (!p) return; const owner = S.me.role === "owner" || S.me.is_admin, admin = !!S.me.is_admin;
   const locked = (!owner && (p.role === "owner" || p.role === "manager")) || (p.is_admin && !admin), roles = owner ? ["owner", "manager", "supervisor", "employee"] : ["supervisor", "employee"];
   const taken = new Set(S.people.filter(x => x.worker_id && x.id !== id).map(x => x.worker_id)), ws = S.workers.filter(w => !taken.has(w.id) && (!w.archived || w.id === p.worker_id));
   const about = { owner: "Everything, including tax settings and who holds which role.", manager: "Workers, sites, timesheets and payroll.", supervisor: "Reviews and corrects shifts at the sites they are assigned to.", employee: "A worker. An employee clocks in and out; a contractor bills visits and picks up jobs. Which one is set by the pay type on the worker record you link below." };
-  const pp = (S.pendingNames || []).find(x => x.profile_id === id);
+  const pp = (S.pendingNames || []).find(x => x.profile_id === id), hire = !locked && readyToHire(p);
   openSheet(`<div class="bar"><h2>${esc(p.full_name || p.email)}</h2><button class="ghost" data-close>Close</button></div><p class="help">${esc(p.email)}</p>
-    ${pp ? `<p class="note">Signed paperwork on file as <b>${esc(pp.legal_name)}</b>${pp.city ? ", " + esc(pp.city) : ""}. It moves onto the worker record the moment you link one below.${!p.worker_id && !S.workers.some(w => !w.archived && w.name.toLowerCase() === pp.legal_name.toLowerCase()) ? ` <button class="linkbtn" id="pr-mkw" style="padding:0">Create the worker record now</button>` : ""}</p>` : ""}
+    ${pp ? `<p class="note">Signed paperwork on file as <b>${esc(pp.legal_name)}</b>${pp.city ? ", " + esc(pp.city) : ""}.${hire ? "" : ` It moves onto the worker record the moment you link one below.`}${!hire && !p.worker_id && !S.workers.some(w => !w.archived && w.name.toLowerCase() === pp.legal_name.toLowerCase()) ? ` <button class="linkbtn" id="pr-mkw" style="padding:0">Create the worker record now</button>` : ""}</p>` : ""}
     ${p.is_admin ? `<p class="note">Administrator. Has every owner power and can assign owners and administrators.</p>` : ""}
+    ${hire ? `<h3>Approve and add to payroll</h3><div class="panel">
+      <p class="help" style="margin-top:0">One step: creates the worker record for <b>${esc(pp.legal_name)}</b> with the pay below, moves their signed W-4, MI-W4, address and Social Security number onto it, assigns their sites, and lets them sign in.</p>
+      <div class="grid2"><div><label class="f" for="hr-type">Pay type</label><select id="hr-type"><option value="W-2">Employee (W-2)</option><option value="1099">Contractor (1099)</option></select></div>
+        <div><label class="f" for="hr-rate">Hourly rate ($)</label><input id="hr-rate" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="18.00"></div></div>
+      <div class="grid2"><div><label class="f" for="hr-hire">Hire date</label><input id="hr-hire" type="date" value="${todayStr()}"></div>
+        <div><label class="f" for="hr-role">Role</label><select id="hr-role">${roles.filter(r => r !== "owner").map(r => `<option value="${r}" ${r === "employee" ? "selected" : ""}>${ROLE_LABEL[r]}</option>`).join("")}</select></div></div>
+      ${S.sites.some(x => x.active) ? `<label class="f">Sites they work at</label><div class="checks">${S.sites.filter(x => x.active).map(x => `<label class="check"><input type="checkbox" data-hrsite="${esc(x.id)}"> ${esc(x.name)}</label>`).join("")}</div>`
+        : `<p class="help">No sites yet. Assign sites later under More, Sites.</p>`}
+      <button class="primary" id="hr-go">Approve and add to payroll</button></div>
+      <details class="inbox-reply"><summary>Set up by hand instead</summary>` : ""}
     ${locked ? `<p class="note">${p.is_admin ? "Only an administrator can change an administrator." : "Only an owner can change owners and managers."}</p>` : `
     <label class="f" for="pr-role">Role</label><select id="pr-role">${roles.map(r => `<option value="${r}" ${p.role === r ? "selected" : ""}>${ROLE_LABEL[r]}</option>`).join("")}</select><p class="help" id="pr-about"></p>
     <label class="f" for="pr-worker">Worker record</label><select id="pr-worker"><option value="">Not linked</option>${ws.map(w => `<option value="${esc(w.id)}" ${p.worker_id === w.id ? "selected" : ""}>${esc(w.name)}</option>`).join("")}</select>
     <p class="help">Linking is what lets this person clock in and see their own pay. Supervisors also need a link, plus a site assignment.</p>
     <label class="check"><input id="pr-active" type="checkbox" ${p.active ? "checked" : ""}> Account is approved and can sign in</label>
     ${admin ? `<label class="check"><input id="pr-admin" type="checkbox" ${p.is_admin ? "checked" : ""}> Administrator (everything an owner can do, plus assigning owners)</label>` : ""}
-    <button class="primary" id="pr-save">Save</button>`}`);
+    <button class="primary" id="pr-save">Save</button>`}${hire ? `</details>` : ""}`);
+  if (hire) $("#hr-go").onclick = async () => {
+    const rate = Number($("#hr-rate").value), hireDate = $("#hr-hire").value, role = $("#hr-role").value, type = $("#hr-type").value;
+    if (!(rate > 0)) { toast("Enter their hourly rate."); return $("#hr-rate").focus(); }
+    if (!hireDate) { toast("Enter their hire date."); return $("#hr-hire").focus(); }
+    const sites = [...document.querySelectorAll("[data-hrsite]:checked")].map(c => c.dataset.hrsite), b = $("#hr-go"); b.disabled = true; b.textContent = "Approving...";
+    const w = await sb.from("workers").insert({ name: pp.legal_name, type, rate, hire_date: hireDate, home_city: "none" }).select().single();
+    if (w.error) { b.disabled = false; b.textContent = "Approve and add to payroll"; return fail(w.error); }
+    const a = sites.length ? await sb.from("site_assignments").insert(sites.map(site_id => ({ site_id, worker_id: w.data.id }))) : { error: null };
+    const r = a.error ? a : await sb.rpc("set_profile", { p_id: id, p_role: role, p_active: true, p_worker: w.data.id });
+    if (r.error) { await sb.from("workers").delete().eq("id", w.data.id); b.disabled = false; b.textContent = "Approve and add to payroll"; return fail(r.error); }
+    closeSheet(); toast(`${pp.legal_name} is approved and on payroll`); refresh(); };
   const mk = $("#pr-mkw"); if (mk) mk.onclick = async () => { const r = await sb.from("workers").insert({ name: pp.legal_name, type: "W-2", rate: 0, hire_date: todayStr(), home_city: "none" }).select().single(); if (r.error) return fail(r.error); await loadData(); personSheet(id); $("#pr-worker").value = r.data.id; toast("Worker record created. Set the pay rate under Workers."); };
   if (locked) return; const ab = () => $("#pr-about").textContent = about[$("#pr-role").value]; ab(); $("#pr-role").onchange = ab;
   $("#pr-save").onclick = async () => { const { error } = await sb.rpc("set_profile", { p_id: id, p_role: $("#pr-role").value, p_active: $("#pr-active").checked, p_worker: $("#pr-worker").value || null });

@@ -88,11 +88,11 @@ Switching someone from 1099 to W-2 costs about 11% on top of wages (7.65% Social
 
 ## Getting a worker started
 
-1. More, Workers, Add worker: name, W-2 or 1099, hourly rate, hire date, weekly cap, home city.
-2. More, Sites: add the worker to the sites they cover.
-3. Send them the app link. They create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, and a signature. It is encrypted and held against their login.
-4. More, People and roles: the login shows "Signed paperwork on file as ..." with a one-tap Create the worker record. Approve, link, save. The paperwork moves onto the worker record automatically. Set their pay rate under Workers.
-5. On first open they sign the sick time policy. Contractors are also asked for a W-9 under More, My tax paperwork.
+1. Send them the app link (rlfsecurity.com/app, or Staff login at the bottom of the website). They create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, and a signature. It is encrypted and held against their login.
+2. More, People and roles: their name shows "Ready to approve". Open it, pick W-2 or 1099, enter the hourly rate and hire date, choose the role and tick the sites they work at, then tap Approve and add to payroll. That one step creates the worker record, moves their signed paperwork onto it, assigns the sites and lets them sign in.
+3. Anything else (weekly cap, notes) can be changed later under More, Workers.
+4. On first open they sign the sick time policy. Contractors are also asked for a W-9 under More, My tax paperwork.
+5. Setting someone up by hand still works: add the worker under More, Workers, then link the login under People and roles ("Set up by hand instead").
 
 ## The worker's phone
 
