@@ -27,6 +27,9 @@ function render() {
   const lost = S.status.small_lost_on; let seen = ""; try { seen = localStorage.getItem("seen_status") || ""; } catch (e) {}
   if (isMgr() && lost && seen !== lost) b.push(`Since ${niceDate(lost)} the business has had 10 or more employees in 20 or more weeks. Sick time caps are now 72 hours. Open Settings and save once so workers are asked to sign the updated policy. <button class="linkbtn" id="b-seen" style="padding:0">Dismiss</button>`);
   if (needsPaperwork() && S.tab !== "paperwork") b.push(`Finish your tax paperwork (W-4, address, Social Security number). <button class="linkbtn" id="b-paper" style="padding:0">Start</button>`);
+  const mine = (S.staff || {})[S.me.id], myLic = licenseState(mine);
+  if (S.me.worker_id && !mine && !needsPaperwork()) b.push(`Add your phone, emergency contact and guard license. <button class="linkbtn" data-contact="1" style="padding:0">Add now</button>`);
+  if (myLic && myLic.days <= 30) b.push(`Your guard license ${myLic.expired ? "has expired" : `expires ${myLic.days === 0 ? "today" : `in ${myLic.days} day${myLic.days === 1 ? "" : "s"}`}`} (${esc(niceDate(mine.license_expires))}). Renew it, then enter the new date. <button class="linkbtn" data-contact="1" style="padding:0">Update</button>`);
   $("#banners").innerHTML = b.map(x => `<div class="banner">${x}</div>`).join("");
   const bp = $("#b-paper"); if (bp) bp.onclick = paperworkSheet;
   const bs = $("#b-seen"); if (bs) bs.onclick = () => { try { localStorage.setItem("seen_status", lost); } catch (e) {} render(); };
@@ -68,8 +71,9 @@ function renderMore() {
   if (isMgr()) items.splice(1, 0, ["books", "Books", "Money in, money out, profit by site"], ["filings", "Tax filings", "941, 940, W-2, 1099, Michigan and city forms"]);
   if (isOwner()) items.push(["website", "Website", "Photos, prices and contact details on rlfsecurity.com"]);
   items.push(["guide", "Guide", "How everything works and when to do what"]);
+  items.push(["contact", "My contact and license", (() => { const ls = licenseState((S.staff || {})[S.me.id]); return !(S.staff || {})[S.me.id] ? "Not filled in yet" : ls ? "Guard license: " + lowerFirst(ls.text) : "Phone and emergency contact"; })()]);
   if (S.me.worker_id) items.push(["paperwork", "My tax paperwork", needsPaperwork() ? "Not done yet" : "W-4, address, Social Security number"]);
-  $("#v-more").innerHTML = `<h2>More</h2>${items.length ? `<ul class="list morelist">${items.map(i => `<li><button class="rowbtn" ${i[0] === "paperwork" ? "data-paper=1" : `data-tab="${i[0]}"`}><span class="main"><b>${i[1]}</b><small>${esc(i[2])}</small></span></button></li>`).join("")}</ul>` : ""}
+  $("#v-more").innerHTML = `<h2>More</h2>${items.length ? `<ul class="list morelist">${items.map(i => `<li><button class="rowbtn" ${i[0] === "paperwork" ? "data-paper=1" : i[0] === "contact" ? "data-contact=1" : `data-tab="${i[0]}"`}><span class="main"><b>${i[1]}</b><small>${esc(i[2])}</small></span></button></li>`).join("")}</ul>` : ""}
     <div class="panel"><b>${esc(S.me.full_name || S.me.email)}</b><p class="help" style="margin-bottom:0">${esc(S.me.email)}, ${S.me.is_admin ? "Administrator" : ROLE_LABEL[S.me.role]}</p><div class="actions"><button class="ghost" id="m-refresh">Refresh</button><button class="ghost" id="m-out">Sign out</button></div></div>`;
   $("#m-out").onclick = async () => { await sb.auth.signOut(); S.me = null; S.tab = null; showAuth("signin"); };
   $("#m-refresh").onclick = async () => { await refresh(); toast("Up to date"); };
@@ -77,8 +81,8 @@ function renderMore() {
 
 /* ================= events ================= */
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-tab],[data-close],[data-worker],[data-stub],[data-dep],[data-punch],[data-site],[data-person],[data-auth],[data-req],[data-att],[data-shift],[data-paper],[data-inv],[data-job]"); if (!t) { if (e.target.id === "sheet") closeSheet(); return; }
-  if (t.dataset.shift) return shiftDetail(t.dataset.shift); if (t.dataset.paper) return paperworkSheet(); if (t.dataset.inv) return invoiceSheet(t.dataset.inv); if (t.dataset.job) return jobSheet(t.dataset.job);
+  const t = e.target.closest("[data-tab],[data-close],[data-worker],[data-stub],[data-dep],[data-punch],[data-site],[data-person],[data-auth],[data-req],[data-att],[data-shift],[data-paper],[data-contact],[data-inv],[data-job]"); if (!t) { if (e.target.id === "sheet") closeSheet(); return; }
+  if (t.dataset.shift) return shiftDetail(t.dataset.shift); if (t.dataset.paper) return paperworkSheet(); if (t.dataset.contact) return myContactSheet(); if (t.dataset.inv) return invoiceSheet(t.dataset.inv); if (t.dataset.job) return jobSheet(t.dataset.job);
   if (t.dataset.tab) go(t.dataset.tab); else if ("close" in t.dataset) closeSheet(); else if (t.dataset.worker) workerSheet(t.dataset.worker); else if (t.dataset.stub) stubSheet(t.dataset.stub);
   else if (t.dataset.dep) toggleDeposit(t.dataset.dep); else if (t.dataset.punch) punchSheet(t.dataset.punch); else if (t.dataset.site) siteSheet(t.dataset.site); else if (t.dataset.person) personSheet(t.dataset.person);
   else if (t.dataset.req) requestSheet(t.dataset.req); else if (t.dataset.att) attendanceSheet(t.dataset.att);

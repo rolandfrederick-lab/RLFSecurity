@@ -17,6 +17,7 @@ function workerSheet(id) {
   <div><label class="f" for="w-hire">Hire date</label><input id="w-hire" type="date" value="${esc(w.hire_date || todayStr())}"></div></div>
   <p class="help">The hire date drives the sick time waiting period and the employee headcount. ${w.terminated_on ? `<b>Employment ended ${esc(niceDate(w.terminated_on))}.</b>` : ""}</p>
   ${id ? `<p class="note num" id="w-sick">Sick time: loading</p>` : ""}
+  ${hireChecklistHtml(w)}
   <h3>Weekly hours cap</h3><div class="grid2"><div><label class="f" for="w-cap">Cap (blank = default ${esc(String((S.cfg.hours || {}).weeklyCap || 40))})</label><input id="w-cap" type="number" inputmode="decimal" min="1" step="0.5" value="${esc(w.weekly_cap ?? "")}"></div>
   <div><label class="f" for="w-capmode">At the cap</label><select id="w-capmode"><option value="" ${!w.cap_mode ? "selected" : ""}>Default (${(S.cfg.hours || {}).capMode === "block" ? "block" : "warn"})</option><option value="warn" ${w.cap_mode === "warn" ? "selected" : ""}>Warn only</option><option value="block" ${w.cap_mode === "block" ? "selected" : ""}>Block clock-in</option></select></div></div>
   <div id="w-w2" ${w.type === "W-2" ? "" : "hidden"}><h3>From the federal Form W-4</h3>
@@ -38,7 +39,7 @@ function workerSheet(id) {
   <label class="f" for="w-notes">Notes</label><textarea id="w-notes" rows="2" placeholder="Example: W-9 on file, brings own supplies">${esc(w.notes || "")}</textarea>
   <button class="primary" id="w-save">Save worker</button>
   ${id ? `<div class="actions"><button class="ghost" id="w-arch">${w.archived ? "Restore worker" : "Archive worker"}</button>${w.terminated_on ? "" : `<button class="danger" id="w-end">End employment</button>`}${has ? "" : `<button class="danger" id="w-del">Delete worker</button>`}</div>` : ""}`);
-  if (id) sickLine(id, "#w-sick");
+  if (id) { sickLine(id, "#w-sick"); wireHireChecklist(id); }
   let type = w.type;
   const clsWarn = () => { const n = [...document.querySelectorAll("[data-cls]")].filter(c => !c.checked).length, el = $("#w-clswarn"); if (!el) return; el.textContent = n === 0 ? "Looks like a genuine contractor." : `${n} of 4 unchecked. This person looks like an employee to the IRS. Paying them on a 1099 risks back taxes for both halves of Social Security and Medicare, penalties and interest, plus Michigan unemployment.`; el.style.color = n === 0 ? "inherit" : "var(--danger)"; };
   clsWarn(); document.querySelectorAll("[data-cls]").forEach(c => c.onchange = clsWarn);
@@ -180,7 +181,8 @@ function siteSheet(id) {
 function renderPeople() {
   const ps = [...S.people].sort((a, b) => (a.active ? 1 : 0) - (b.active ? 1 : 0) || (a.full_name || "").localeCompare(b.full_name || ""));
   $("#v-people").innerHTML = `${backMore}<h2>People and roles</h2><p class="help">Everyone who created an account. Approve new people, pick their role, and link each login to a worker so they can clock in.</p><ul class="list">` +
-    ps.map(p => `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}</small></span>${readyToHire(p) ? `<span class="tag c">Ready to approve</span>` : `<span class="tag ${p.active ? "" : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span>`}</button></li>`).join("") + `</ul>`;
+    ps.map(p => { const ls = licenseState((S.staff || {})[p.id]); return `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}${ls && (ls.expired || ls.soon) ? `. Guard license: ${esc(lowerFirst(ls.text))}` : ""}</small></span>${readyToHire(p) ? `<span class="tag c">Ready to approve</span>` : `<span class="tag ${p.active ? (ls && ls.expired ? "no" : "") : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span>`}</button></li>`; }).join("") + `</ul>` + hiringCodesHtml();
+  wireHiringCodes();
 }
 /* Signed their paperwork at sign-up and has no worker record yet: one form approves them. */
 const readyToHire = p => !p.worker_id && (S.pendingNames || []).some(x => x.profile_id === p.id);
@@ -191,7 +193,8 @@ function personSheet(id) {
   const taken = new Set(S.people.filter(x => x.worker_id && x.id !== id).map(x => x.worker_id)), ws = S.workers.filter(w => !taken.has(w.id) && (!w.archived || w.id === p.worker_id));
   const about = { owner: "Everything, including tax settings and who holds which role.", manager: "Workers, sites, timesheets and payroll.", supervisor: "Reviews and corrects shifts at the sites they are assigned to.", employee: "A worker. An employee clocks in and out; a contractor bills visits and picks up jobs. Which one is set by the pay type on the worker record you link below." };
   const pp = (S.pendingNames || []).find(x => x.profile_id === id), hire = !locked && readyToHire(p);
-  openSheet(`<div class="bar"><h2>${esc(p.full_name || p.email)}</h2><button class="ghost" data-close>Close</button></div><p class="help">${esc(p.email)}</p>
+  openSheet(`<div class="bar"><h2>${esc(p.full_name || p.email)}</h2><button class="ghost" data-close>Close</button></div><p class="help">${esc(p.email)}${p.hire_code ? `. Signed up with hiring code ${esc(hcFormat(p.hire_code))}` : ""}</p>
+    ${staffPanelHtml(id)}
     ${pp ? `<p class="note">Signed paperwork on file as <b>${esc(pp.legal_name)}</b>${pp.city ? ", " + esc(pp.city) : ""}.${hire ? "" : ` It moves onto the worker record the moment you link one below.`}${!hire && !p.worker_id && !S.workers.some(w => !w.archived && w.name.toLowerCase() === pp.legal_name.toLowerCase()) ? ` <button class="linkbtn" id="pr-mkw" style="padding:0">Create the worker record now</button>` : ""}</p>` : ""}
     ${p.is_admin ? `<p class="note">Administrator. Has every owner power and can assign owners and administrators.</p>` : ""}
     ${hire ? `<h3>Approve and add to payroll</h3><div class="panel">
@@ -211,6 +214,7 @@ function personSheet(id) {
     <label class="check"><input id="pr-active" type="checkbox" ${p.active ? "checked" : ""}> Account is approved and can sign in</label>
     ${admin ? `<label class="check"><input id="pr-admin" type="checkbox" ${p.is_admin ? "checked" : ""}> Administrator (everything an owner can do, plus assigning owners)</label>` : ""}
     <button class="primary" id="pr-save">Save</button>`}${hire ? `</details>` : ""}`);
+  wireStaffPanel(id);
   if (hire) $("#hr-go").onclick = async () => {
     const rate = Number($("#hr-rate").value), hireDate = $("#hr-hire").value, role = $("#hr-role").value, type = $("#hr-type").value;
     if (!(rate > 0)) { toast("Enter their hourly rate."); return $("#hr-rate").focus(); }
@@ -221,7 +225,7 @@ function personSheet(id) {
     const a = sites.length ? await sb.from("site_assignments").insert(sites.map(site_id => ({ site_id, worker_id: w.data.id }))) : { error: null };
     const r = a.error ? a : await sb.rpc("set_profile", { p_id: id, p_role: role, p_active: true, p_worker: w.data.id });
     if (r.error) { await sb.from("workers").delete().eq("id", w.data.id); b.disabled = false; b.textContent = "Approve and add to payroll"; return fail(r.error); }
-    closeSheet(); toast(`${pp.legal_name} is approved and on payroll`); refresh(); };
+    closeSheet(); toast(`${pp.legal_name} is approved and on payroll`); await loadData(); render(); if (type === "W-2") workerSheet(w.data.id); };
   const mk = $("#pr-mkw"); if (mk) mk.onclick = async () => { const r = await sb.from("workers").insert({ name: pp.legal_name, type: "W-2", rate: 0, hire_date: todayStr(), home_city: "none" }).select().single(); if (r.error) return fail(r.error); await loadData(); personSheet(id); $("#pr-worker").value = r.data.id; toast("Worker record created. Set the pay rate under Workers."); };
   if (locked) return; const ab = () => $("#pr-about").textContent = about[$("#pr-role").value]; ab(); $("#pr-role").onchange = ab;
   $("#pr-save").onclick = async () => { const { error } = await sb.rpc("set_profile", { p_id: id, p_role: $("#pr-role").value, p_active: $("#pr-active").checked, p_worker: $("#pr-worker").value || null });

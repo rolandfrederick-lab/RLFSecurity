@@ -14,6 +14,11 @@ function todoItems() {
   const missed = S.shifts.filter(s => s.status === "missed" && new Date(s.on_date) > Date.now() - 14 * 864e5).length; if (missed) items.push({ key: "op-missed", due: todayStr(), days: 0, title: `${missed} missed shift${missed === 1 ? "" : "s"}`, detail: "Log attendance or clear them on the Timesheets tab.", tab: "team", kind: "op" });
   if ((S.paperworkMissing || []).length) items.push({ key: "op-paper", due: todayStr(), days: 0, title: `${S.paperworkMissing.length} worker${S.paperworkMissing.length === 1 ? " has" : "s have"} not done tax paperwork`, detail: S.paperworkMissing.join(", ") + ". They do it on their phone under More, My tax paperwork.", tab: "workers", kind: "op" });
   const wait = S.people.filter(p => !p.active).length; if (wait) items.push({ key: "op-people", due: todayStr(), days: 0, title: `${wait} new login${wait === 1 ? "" : "s"} waiting for approval`, detail: "Approve and link under People and roles.", tab: "people", kind: "op" });
+  // new hires: Form I-9 and the Michigan new hire report
+  S.workers.forEach(w => hireSteps(w).forEach(st => { if (!st.done) add(`${st.key}-${w.id}`, st.due, `${st.key === "i9" ? "Form I-9" : "Michigan new hire report"} for ${w.name}`, st.how, "workers", "hire"); }));
+  // guard licenses expiring within 30 days, or already expired
+  S.people.filter(p => p.active).forEach(p => { const d = (S.staff || {})[p.id], ls = licenseState(d); if (!ls || ls.days > 30) return;
+    items.push({ key: `lic-${p.id}`, due: d.license_expires, days: ls.days, title: `${p.full_name || p.email}: guard license ${ls.expired ? "expired" : "expires soon"}`, detail: `License ${d.license_number}. Once it is renewed, enter the new expiration date on their profile under People and roles, or they update it under More, My contact and license.`, tab: "people", kind: "license" }); });
   // deposits, from this year's paychecks
   if (S.year === Y) { const fed = Array(12).fill(0), mi = Array(12).fill(0), uia = [0, 0, 0, 0], futa = [0, 0, 0, 0];
     S.checks.filter(c => c.type === "W-2").forEach(c => { const m = Number(c.pay_date.slice(5, 7)) - 1; fed[m] += Number(c.fed941) || 0; mi[m] += (Number(c.state) || 0) + (Number(c.city) || 0); uia[Math.floor(m / 3)] += Number(c.suta) || 0; futa[Math.floor(m / 3)] += Number(c.futa) || 0; });
@@ -43,8 +48,10 @@ function due941(y, k) { const m = (k + 1) * 3; return m === 12 ? `${y + 1}-01-31
 function renderTodos() {
   const items = todoItems();
   if (!items.length) return "";
-  return `<h3>To do</h3><ul class="list">${items.map(i => `<li><div class="rowbtn" style="display:flex;padding:12px 14px;gap:10px;align-items:center;flex-wrap:wrap"><span class="main"><b>${esc(i.title)}</b><small>${esc(i.detail)}${i.kind === "op" ? "" : ` Due ${esc(niceDate(i.due))}.`}</small></span>
+  return `<h3>To do</h3><ul class="list">${items.map(i => `<li><div class="rowbtn" style="display:flex;padding:12px 14px;gap:10px;align-items:center;flex-wrap:wrap"><span class="main"><b>${esc(i.title)}</b><small>${esc(i.detail)}${i.kind === "op" ? "" : ` ${i.kind === "license" ? "Expires" : "Due"} ${esc(niceDate(i.due))}.`}</small></span>
     <span class="tag ${i.days < 0 ? "no" : i.days <= 7 ? "c" : ""}">${i.kind === "op" ? "Now" : i.days < 0 ? `${-i.days} day${i.days === -1 ? "" : "s"} late` : i.days === 0 ? "Due today" : `${i.days} day${i.days === 1 ? "" : "s"}`}</span>
-    <button class="ghost" data-tab="${esc(i.tab)}" style="min-height:36px;padding:6px 10px">Open</button>${i.kind === "op" ? "" : `<button class="ghost" data-done="${esc(i.key)}" style="min-height:36px;padding:6px 10px">Done</button>`}</div></li>`).join("")}</ul>`;
+    <button class="ghost" data-tab="${esc(i.tab)}" style="min-height:36px;padding:6px 10px">Open</button>${i.kind === "op" || i.kind === "license" ? "" : `<button class="ghost" data-done="${esc(i.key)}" style="min-height:36px;padding:6px 10px">Done</button>`}</div></li>`).join("")}</ul>`;
 }
-function wireTodos() { document.querySelectorAll("[data-done]").forEach(b => b.onclick = async () => { const r = await sb.from("done_items").insert({ key: b.dataset.done, by_name: S.me.full_name || "" }); if (r.error) return fail(r.error); toast("Marked done"); refresh(); }); }
+function wireTodos() { document.querySelectorAll("[data-done]").forEach(b => b.onclick = async () => {
+  const hs = /^(i9|nh)-(.+)$/.exec(b.dataset.done); if (hs) { const r = await sb.from("workers").update({ [hs[1] === "i9" ? "i9_done_on" : "newhire_reported_on"]: todayStr() }).eq("id", hs[2]); if (r.error) return fail(r.error); toast("Marked done"); return refresh(); }
+  const r = await sb.from("done_items").insert({ key: b.dataset.done, by_name: S.me.full_name || "" }); if (r.error) return fail(r.error); toast("Marked done"); refresh(); }); }

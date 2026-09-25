@@ -97,7 +97,9 @@ async function loadData() {
     jobs.push(q(sb.rpc("pending_paperwork_names")).then(d => S.pendingNames = d || []));
     if (isOwner()) jobs.push(q(sb.from("owner_tax").select("data").eq("id", 1).maybeSingle()).then(d => S.ownerTax = (d && d.data) || {}).catch(() => S.ownerTax = {})); else S.ownerTax = null;
     jobs.push(q(sb.rpc("pay_quarters")).then(d => S.payQuarters = new Set(d || [])));
+    jobs.push(q(sb.from("hire_codes").select("*").order("created_at", { ascending: false }).limit(200)).then(d => S.hireCodes = d).catch(() => S.hireCodes = []));
   }
+  jobs.push(q(sb.from("staff_details").select("*")).then(d => { S.staff = {}; (d || []).forEach(x => S.staff[x.profile_id] = x); }).catch(() => S.staff = {}));
   jobs.push(q(sb.rpc("employer_status")).then(d => S.status = d || {}));
   const shiftQ = () => q(sb.from("shifts").select("*").gte("on_date", ymd(new Date(Date.now() - 21 * 864e5))).lte("on_date", ymd(new Date(Date.now() + 35 * 864e5))).order("on_date")).then(d => S.shifts = d);
   jobs.push(isMgr() ? sb.rpc("sweep_shifts").then(shiftQ) : shiftQ());

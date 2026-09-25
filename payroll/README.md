@@ -15,6 +15,24 @@ Supabase project, so the two companies' data stay separate.
 - `payroll/SETUP.md`: full setup and first-run guide.
 - `payroll/tests/sql/`: database tests carried over from the original app.
 
+## Hiring codes, contact details, new-hire checklist
+
+`supabase/migrations/20260925120000_hiring_codes_and_staff_details.sql` and `public/app/js/staff.js`.
+
+- **Hiring codes.** Owners and managers create one-time codes under People and roles
+  (8 characters, expire after 14 days, can be cancelled). The `handle_new_user` trigger
+  refuses to create any account without a valid unused code, so the check cannot be
+  skipped by going around the app; the very first account (the owner) needs none. The
+  sign-up screen checks the code first (`check_hire_code`) and locks for 15 minutes on
+  that device after 5 wrong codes.
+- **Contact and guard license.** `staff_details` holds each person's phone, emergency
+  contact, guard license number and expiration. Entered with their paperwork, editable
+  under More, My contact and license; owners and managers can see and edit them.
+  Licenses within 30 days of expiring show on the To do list and on the person's phone.
+- **New-hire checklist.** W-2 workers added from now on get Form I-9 (due 3 business
+  days after the hire date) and the Michigan new hire report (due in 20 days) on their
+  worker record and the To do list until marked done.
+
 ## Website editing
 
 Owners (and administrators) get **More, Website** in the app. It edits the public site's

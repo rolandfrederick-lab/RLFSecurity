@@ -88,11 +88,20 @@ Switching someone from 1099 to W-2 costs about 11% on top of wages (7.65% Social
 
 ## Getting a worker started
 
-1. Send them the app link (rlfsecurity.com/app, or Staff login at the bottom of the website). They create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, and a signature. It is encrypted and held against their login.
-2. More, People and roles: their name shows "Ready to approve". Open it, pick W-2 or 1099, enter the hourly rate and hire date, choose the role and tick the sites they work at, then tap Approve and add to payroll. That one step creates the worker record, moves their signed paperwork onto it, assigns the sites and lets them sign in.
-3. Anything else (weekly cap, notes) can be changed later under More, Workers.
-4. On first open they sign the sick time policy. Contractors are also asked for a W-9 under More, My tax paperwork.
-5. Setting someone up by hand still works: add the worker under More, Workers, then link the login under People and roles ("Set up by hand instead").
+1. More, People and roles, Hiring codes: type who it is for and tap **Create hiring code**. Send the message it gives you by text or email (Text it, Email it, or Copy message). It has the app link with the code filled in. Each code works once and expires after 14 days; tap Cancel code to stop one early. Nobody can create an account without a code, and 5 wrong codes lock the sign-up screen on that phone for 15 minutes.
+2. They open the link, enter the code, create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, cell phone, emergency contact, guard license number and expiration date, and a signature. It is encrypted and held against their login.
+3. More, People and roles: their name shows "Ready to approve". Open it, pick W-2 or 1099, enter the hourly rate and hire date, choose the role and tick the sites they work at, then tap Approve and add to payroll. That one step creates the worker record, moves their signed paperwork onto it, assigns the sites and lets them sign in.
+4. For a W-2 employee the worker record then shows the **new-hire checklist**:
+   - **Form I-9**, due by the end of the third business day after they start. See their original ID documents in person, fill in Section 2 and keep it on file (3 years after hire, or 1 year after they leave, whichever is later). It is not mailed anywhere.
+   - **Michigan new hire report**, due within 20 days of the hire date, free at mi-newhire.com.
+   Both show on the To do list until you mark them done.
+5. Anything else (weekly cap, notes) can be changed later under More, Workers.
+6. On first open they sign the sick time policy. Contractors are also asked for a W-9 under More, My tax paperwork.
+7. Setting someone up by hand still works: add the worker under More, Workers, then link the login under People and roles ("Set up by hand instead").
+
+## Guard licenses and emergency contacts
+
+Each person's phone, emergency contact and guard license are on their profile under People and roles (tap the phone numbers to call). Staff update their own under More, My contact and license. From 30 days before a license expires, it shows on your To do list and as a banner on that person's phone, and it stays until the new expiration date is entered. An expired license shows in red.
 
 ## The worker's phone
 
