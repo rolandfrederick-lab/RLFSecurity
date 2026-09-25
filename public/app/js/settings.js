@@ -25,6 +25,7 @@ function renderSettings() {
     <label class="f" for="c-ws">Workweek starts on</label><select id="c-ws" ${dis}>${DAYS.map((d, i) => `<option value="${i}" ${c.weekStart === i ? "selected" : ""}>${d}</option>`).join("")}</select>
     <label class="f" for="c-ot">Overtime multiplier</label><input id="c-ot" type="number" inputmode="decimal" step="0.1" min="1" value="${esc(c.otMultiplier)}" ${dis}>
     <p class="help">Overtime is counted per workweek, over 40 hours. Weekly or two-week pay periods that start on the workweek day keep the overtime split exact.</p></div>
+    ${agencyPanelHtml(c, dis)}
     <h3>Time clock</h3><div class="panel"><label class="f" for="c-pol">When someone clocks in away from the site</label><select id="c-pol" ${dis}><option value="block" ${c.outsidePolicy === "block" ? "selected" : ""}>Block the clock-in</option><option value="flag" ${c.outsidePolicy === "flag" ? "selected" : ""}>Allow it, and flag it for review</option></select>
     <label class="check"><input id="c-auto" type="checkbox" ${c.autoApprove ? "checked" : ""} ${dis}> Approve on-site shifts automatically</label>
     <p class="help">Clocking out is never blocked. An off-site clock-out is flagged for review instead.</p></div>
@@ -74,7 +75,7 @@ function renderSettings() {
     const old = S.cfg.sick || {}, changed = ["extraUseCap", "extraCarryCap", "waitDays", "plannedNoticeDays", "yearBasis"].some(k => (old[k] ?? null) !== (ns[k] ?? null)) || !old.policyVersion
       || (S.status.small_lost_on && (!old.policyUpdatedAt || old.policyUpdatedAt < S.status.small_lost_on));
     n.sick = { ...old, ...ns, policyVersion: changed ? (Number(old.policyVersion) || 0) + 1 : old.policyVersion, policyUpdatedAt: changed ? todayStr() : old.policyUpdatedAt };
-    SET_FIELDS.forEach(f => n[f[0]] = num($("#c-" + f[0]).value) / f[2]);
+    SET_FIELDS.forEach(f => n[f[0]] = num($("#c-" + f[0]).value) / f[2]); n.agency = readAgencyPanel();
     const ot = { type: $("#c-o-type").value, filing: $("#c-o-filing").value, homeCity: $("#c-o-city").value, otherIncome: num($("#c-o-other").value), otherWages: num($("#c-o-wages").value), miExemptions: num($("#c-o-ex").value) };
     { const r = await sb.from("owner_tax").upsert({ id: 1, data: ot, updated_at: new Date().toISOString() }); if (r.error) return fail(r.error); S.ownerTax = ot; }
     n.business = {}; ["legalName", "tradeName", "ein", "street", "city", "state", "zip", "contactName", "title", "phone", "email", "uiaAccount", "bsoUserId"].forEach(k => n.business[k] = $("#c-b-" + k).value.trim());

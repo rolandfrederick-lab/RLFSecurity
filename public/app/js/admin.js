@@ -2,9 +2,9 @@ const backMore = `<button class="back" data-tab="more">Back to More</button>`;
 /* ================= workers ================= */
 function renderWorkers() {
   const ws = [...S.workers].sort((a, b) => (a.archived ? 1 : 0) - (b.archived ? 1 : 0) || a.name.localeCompare(b.name));
-  $("#v-workers").innerHTML = `${backMore}<h2>Workers</h2>` + (ws.length ? `<ul class="list">` + ws.map(w => `<li><button class="rowbtn" data-worker="${esc(w.id)}"><span class="main"><b>${esc(w.name)}</b><small class="num">${usd(w.rate)} per hour${w.archived ? ", archived" : ""}${S.people.some(p => p.worker_id === w.id) ? "" : ", no login linked"}</small></span><span class="tag ${w.type === "1099" ? "c" : ""}">${esc(w.type)}</span></button></li>`).join("") + `</ul>`
-    : `<p class="empty">No workers yet. Add the first one to start running payroll.</p>`) + `<button class="primary" id="w-add">Add worker</button>`;
-  $("#w-add").onclick = () => workerSheet(null);
+  $("#v-workers").innerHTML = `${backMore}<h2>Workers</h2>` + (ws.length ? `<ul class="list">` + ws.map(w => `<li><button class="rowbtn" data-worker="${esc(w.id)}"><span class="main"><b>${esc(w.name)}</b><small class="num">${usd(w.rate)} per hour${w.archived ? ", archived" : ""}${S.people.some(p => p.worker_id === w.id) ? "" : ", no login linked"}${notCleared(w) ? ", not cleared for posts yet" : ""}</small></span><span class="tag ${w.type === "1099" ? "c" : ""}">${esc(w.type)}</span></button></li>`).join("") + `</ul>`
+    : `<p class="empty">No workers yet. Add the first one to start running payroll.</p>`) + `<button class="primary" id="w-add">Add worker</button><div class="actions"><button class="ghost" id="w-roster">LARA employee roster</button></div>`;
+  $("#w-add").onclick = () => workerSheet(null); $("#w-roster").onclick = rosterSheet;
 }
 function workerSheet(id) {
   const w = S.workers.find(x => x.id === id) || { type: "W-2", filing: "Single", mi_exemptions: 1, city_rate: 0 }, has = S.checks.some(c => c.worker_id === id) || S.punches.some(p => p.worker_id === id);
@@ -181,7 +181,7 @@ function siteSheet(id) {
 function renderPeople() {
   const ps = [...S.people].sort((a, b) => (a.active ? 1 : 0) - (b.active ? 1 : 0) || (a.full_name || "").localeCompare(b.full_name || ""));
   $("#v-people").innerHTML = `${backMore}<h2>People and roles</h2><p class="help">Everyone who created an account. Approve new people, pick their role, and link each login to a worker so they can clock in.</p><ul class="list">` +
-    ps.map(p => { const ls = licenseState((S.staff || {})[p.id]); return `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}${ls && (ls.expired || ls.soon) ? `. Guard license: ${esc(lowerFirst(ls.text))}` : ""}</small></span>${readyToHire(p) ? `<span class="tag c">Ready to approve</span>` : `<span class="tag ${p.active ? (ls && ls.expired ? "no" : "") : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span>`}</button></li>`; }).join("") + `</ul>` + hiringCodesHtml();
+    ps.map(p => { const ls = licenseState((S.staff || {})[p.id]); return `<li><button class="rowbtn" data-person="${esc(p.id)}"><span class="main"><b>${esc(p.full_name || p.email)}</b><small>${esc(p.email)}${p.worker_id ? "" : ", not linked to a worker"}${ls && (ls.expired || ls.soon) ? `. CPL: ${esc(lowerFirst(ls.text))}` : ""}</small></span>${readyToHire(p) ? `<span class="tag c">Ready to approve</span>` : `<span class="tag ${p.active ? (ls && ls.expired ? "no" : "") : "c"}">${p.active ? roleLabel(p) : "Waiting"}</span>`}</button></li>`; }).join("") + `</ul>` + hiringCodesHtml();
   wireHiringCodes();
 }
 /* Signed their paperwork at sign-up and has no worker record yet: one form approves them. */
@@ -198,7 +198,8 @@ function personSheet(id) {
     ${pp ? `<p class="note">Signed paperwork on file as <b>${esc(pp.legal_name)}</b>${pp.city ? ", " + esc(pp.city) : ""}.${hire ? "" : ` It moves onto the worker record the moment you link one below.`}${!hire && !p.worker_id && !S.workers.some(w => !w.archived && w.name.toLowerCase() === pp.legal_name.toLowerCase()) ? ` <button class="linkbtn" id="pr-mkw" style="padding:0">Create the worker record now</button>` : ""}</p>` : ""}
     ${p.is_admin ? `<p class="note">Administrator. Has every owner power and can assign owners and administrators.</p>` : ""}
     ${hire ? `<h3>Approve and add to payroll</h3><div class="panel">
-      <p class="help" style="margin-top:0">One step: creates the worker record for <b>${esc(pp.legal_name)}</b> with the pay below, moves their signed W-4, MI-W4, address and Social Security number onto it, assigns their sites, and lets them sign in.</p>
+      <p class="note" style="margin-top:0">Before their first post: fingerprint background check (state and FBI), signed employment application and eligibility check. They show on the new-hire checklist after you approve.</p>
+      <p class="help">One step: creates the worker record for <b>${esc(pp.legal_name)}</b> with the pay below, moves their signed W-4, MI-W4, address and Social Security number onto it, assigns their sites, and lets them sign in.</p>
       <div class="grid2"><div><label class="f" for="hr-type">Pay type</label><select id="hr-type"><option value="W-2">Employee (W-2)</option><option value="1099">Contractor (1099)</option></select></div>
         <div><label class="f" for="hr-rate">Hourly rate ($)</label><input id="hr-rate" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="18.00"></div></div>
       <div class="grid2"><div><label class="f" for="hr-hire">Hire date</label><input id="hr-hire" type="date" value="${todayStr()}"></div>
@@ -225,7 +226,7 @@ function personSheet(id) {
     const a = sites.length ? await sb.from("site_assignments").insert(sites.map(site_id => ({ site_id, worker_id: w.data.id }))) : { error: null };
     const r = a.error ? a : await sb.rpc("set_profile", { p_id: id, p_role: role, p_active: true, p_worker: w.data.id });
     if (r.error) { await sb.from("workers").delete().eq("id", w.data.id); b.disabled = false; b.textContent = "Approve and add to payroll"; return fail(r.error); }
-    closeSheet(); toast(`${pp.legal_name} is approved and on payroll`); await loadData(); render(); if (type === "W-2") workerSheet(w.data.id); };
+    closeSheet(); toast(`${pp.legal_name} is approved and on payroll`); await loadData(); render(); workerSheet(w.data.id); };
   const mk = $("#pr-mkw"); if (mk) mk.onclick = async () => { const r = await sb.from("workers").insert({ name: pp.legal_name, type: "W-2", rate: 0, hire_date: todayStr(), home_city: "none" }).select().single(); if (r.error) return fail(r.error); await loadData(); personSheet(id); $("#pr-worker").value = r.data.id; toast("Worker record created. Set the pay rate under Workers."); };
   if (locked) return; const ab = () => $("#pr-about").textContent = about[$("#pr-role").value]; ab(); $("#pr-role").onchange = ab;
   $("#pr-save").onclick = async () => { const { error } = await sb.rpc("set_profile", { p_id: id, p_role: $("#pr-role").value, p_active: $("#pr-active").checked, p_worker: $("#pr-worker").value || null });

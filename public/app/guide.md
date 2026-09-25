@@ -89,9 +89,9 @@ Switching someone from 1099 to W-2 costs about 11% on top of wages (7.65% Social
 ## Getting a worker started
 
 1. More, People and roles, Hiring codes: type who it is for and tap **Create hiring code**. Send the message it gives you by text or email (Text it, Email it, or Copy message). It has the app link with the code filled in. Each code works once and expires after 14 days; tap Cancel code to stop one early. Nobody can create an account without a code, and 5 wrong codes lock the sign-up screen on that phone for 15 minutes.
-2. They open the link, enter the code, create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, cell phone, emergency contact, guard license number and expiration date, and a signature. It is encrypted and held against their login.
+2. They open the link, enter the code, create an account and are asked right away for their paperwork: legal name, address, Social Security number, W-4 and MI-W4 answers, cell phone, date of birth, emergency contact (and a CPL for armed posts), and a signature. It is encrypted and held against their login.
 3. More, People and roles: their name shows "Ready to approve". Open it, pick W-2 or 1099, enter the hourly rate and hire date, choose the role and tick the sites they work at, then tap Approve and add to payroll. That one step creates the worker record, moves their signed paperwork onto it, assigns the sites and lets them sign in.
-4. For a W-2 employee the worker record then shows the **new-hire checklist**:
+4. The worker record then shows the **new-hire checklist**. First the security screening, before any post: fingerprint background check (state and FBI), signed employment application on file, and eligibility confirmed (see Agency license, bond and insurance below). For a W-2 employee also:
    - **Form I-9**, due by the end of the third business day after they start. See their original ID documents in person, fill in Section 2 and keep it on file (3 years after hire, or 1 year after they leave, whichever is later). It is not mailed anywhere.
    - **Michigan new hire report**, due within 20 days of the hire date, free at mi-newhire.com.
    Both show on the To do list until you mark them done.
@@ -99,9 +99,18 @@ Switching someone from 1099 to W-2 costs about 11% on top of wages (7.65% Social
 6. On first open they sign the sick time policy. Contractors are also asked for a W-9 under More, My tax paperwork.
 7. Setting someone up by hand still works: add the worker under More, Workers, then link the login under People and roles ("Set up by hand instead").
 
-## Guard licenses and emergency contacts
+## Agency license, bond and insurance (Michigan)
 
-Each person's phone, emergency contact and guard license are on their profile under People and roles (tap the phone numbers to call). Staff update their own under More, My contact and license. From 30 days before a license expires, it shows on your To do list and as a banner on that person's phone, and it stays until the new expiration date is entered. An expired license shows in red.
+Michigan licenses the security guard agency, not each officer (Private Security Business and Security Alarm Act, 1968 PA 330). Every officer works under the agency license, which is held by the owner as the qualifying person and backed by the surety bond and insurance. What that means in practice:
+
+- **The license, bond and insurance.** Enter them under More, Settings, Agency license, bond and insurance. The law requires a $25,000 surety bond, or insurance of at least $25,000 property damage, $100,000 injury or death of one person and $200,000 for more than one, kept in force for the whole 2-year license period. Reminders appear 60 days before the license, bond, liability and workers' comp dates.
+- **Before anyone stands a post.** Fingerprints for the Michigan State Police and FBI criminal history check, a complete signed employment application (keep at least 1 year), and the eligibility rules: at least 18; high school diploma, GED or equivalent; no felony; no conviction in the last 5 years for impersonating a law enforcement officer, illegal weapon use or possession, or a controlled substance offense; not dishonorably discharged. These are the first three items on every new hire's checklist, and the worker shows "not cleared for posts yet" until they are done.
+- **Personnel records.** Keep complete personnel information for everyone employed. The agency is accountable for each officer's conduct on the job.
+- **Quarterly employee roster.** Filed with LARA in MiCLEAR (your license, Additional Actions, Security Guard Quarterly Report): Q1 by April 15, Q2 by July 15, Q3 by October 15, Q4 by January 15. More, Workers, **LARA employee roster** lists everyone employed during a quarter with date of birth, hire date and end date, and downloads it. A missing roster can suspend the license, and renewal is not processed until every quarter is filed.
+- **Uniforms and badges.** Uniforms and any badge or shield need LARA's written approval before use. A badge may not resemble a police or sheriff badge, and LARA lists a star, an eagle and the State seal as insignia not to use. Shoulder patches with the agency's licensed name, at least 3 by 5 inches, go on every uniform jacket, coat and shirt.
+- **Armed posts.** Officers on armed posts add their Michigan CPL and its expiration under My contact details. It shows on their profile, and on the To do list and their phone from 30 days before it expires.
+
+Each person's phone, date of birth and emergency contact are on their profile under People and roles (tap the numbers to call). Staff update their own under More, My contact details.
 
 ## The worker's phone
 

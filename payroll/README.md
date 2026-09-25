@@ -25,13 +25,17 @@ Supabase project, so the two companies' data stay separate.
   skipped by going around the app; the very first account (the owner) needs none. The
   sign-up screen checks the code first (`check_hire_code`) and locks for 15 minutes on
   that device after 5 wrong codes.
-- **Contact and guard license.** `staff_details` holds each person's phone, emergency
-  contact, guard license number and expiration. Entered with their paperwork, editable
-  under More, My contact and license; owners and managers can see and edit them.
-  Licenses within 30 days of expiring show on the To do list and on the person's phone.
-- **New-hire checklist.** W-2 workers added from now on get Form I-9 (due 3 business
-  days after the hire date) and the Michigan new hire report (due in 20 days) on their
-  worker record and the To do list until marked done.
+- **Contact details.** `staff_details` holds each person's phone, date of birth, emergency
+  contact and, for armed posts, their Michigan CPL and expiration. Michigan does not
+  license security officers individually; they work under the agency license.
+- **New-hire checklist.** Workers added from now on get the security screening required
+  of a licensed agency (fingerprint background check, signed application, eligibility)
+  before their first post, and W-2 employees also Form I-9 (3 business days) and the
+  Michigan new hire report (20 days).
+- **Agency compliance** (`supabase/migrations/20260925150000_agency_compliance.sql`).
+  Settings holds the LARA agency license, surety bond, liability and workers' comp dates
+  with reminders 60 days ahead. Workers, LARA employee roster builds the quarterly roster
+  (name, date of birth, hire and end dates) with a reminder each quarter.
 
 ## Website editing
 

@@ -28,8 +28,8 @@ function render() {
   if (isMgr() && lost && seen !== lost) b.push(`Since ${niceDate(lost)} the business has had 10 or more employees in 20 or more weeks. Sick time caps are now 72 hours. Open Settings and save once so workers are asked to sign the updated policy. <button class="linkbtn" id="b-seen" style="padding:0">Dismiss</button>`);
   if (needsPaperwork() && S.tab !== "paperwork") b.push(`Finish your tax paperwork (W-4, address, Social Security number). <button class="linkbtn" id="b-paper" style="padding:0">Start</button>`);
   const mine = (S.staff || {})[S.me.id], myLic = licenseState(mine);
-  if (S.me.worker_id && !mine && !needsPaperwork()) b.push(`Add your phone, emergency contact and guard license. <button class="linkbtn" data-contact="1" style="padding:0">Add now</button>`);
-  if (myLic && myLic.days <= 30) b.push(`Your guard license ${myLic.expired ? "has expired" : `expires ${myLic.days === 0 ? "today" : `in ${myLic.days} day${myLic.days === 1 ? "" : "s"}`}`} (${esc(niceDate(mine.license_expires))}). Renew it, then enter the new date. <button class="linkbtn" data-contact="1" style="padding:0">Update</button>`);
+  if (S.me.worker_id && (!mine || !mine.date_of_birth) && !needsPaperwork()) b.push(`Add your phone, date of birth and emergency contact. <button class="linkbtn" data-contact="1" style="padding:0">Add now</button>`);
+  if (myLic && myLic.days <= 30) b.push(`Your CPL ${myLic.expired ? "has expired" : `expires ${myLic.days === 0 ? "today" : `in ${myLic.days} day${myLic.days === 1 ? "" : "s"}`}`} (${esc(niceDate(mine.license_expires))}). No armed posts once it expires. Renew it, then enter the new date. <button class="linkbtn" data-contact="1" style="padding:0">Update</button>`);
   $("#banners").innerHTML = b.map(x => `<div class="banner">${x}</div>`).join("");
   const bp = $("#b-paper"); if (bp) bp.onclick = paperworkSheet;
   const bs = $("#b-seen"); if (bs) bs.onclick = () => { try { localStorage.setItem("seen_status", lost); } catch (e) {} render(); };
@@ -71,7 +71,7 @@ function renderMore() {
   if (isMgr()) items.splice(1, 0, ["books", "Books", "Money in, money out, profit by site"], ["filings", "Tax filings", "941, 940, W-2, 1099, Michigan and city forms"]);
   if (isOwner()) items.push(["website", "Website", "Photos, prices and contact details on rlfsecurity.com"]);
   items.push(["guide", "Guide", "How everything works and when to do what"]);
-  items.push(["contact", "My contact and license", (() => { const ls = licenseState((S.staff || {})[S.me.id]); return !(S.staff || {})[S.me.id] ? "Not filled in yet" : ls ? "Guard license: " + lowerFirst(ls.text) : "Phone and emergency contact"; })()]);
+  items.push(["contact", "My contact details", (() => { const ls = licenseState((S.staff || {})[S.me.id]); return !(S.staff || {})[S.me.id] ? "Not filled in yet" : ls ? "CPL: " + lowerFirst(ls.text) : "Phone, birth date and emergency contact"; })()]);
   if (S.me.worker_id) items.push(["paperwork", "My tax paperwork", needsPaperwork() ? "Not done yet" : "W-4, address, Social Security number"]);
   $("#v-more").innerHTML = `<h2>More</h2>${items.length ? `<ul class="list morelist">${items.map(i => `<li><button class="rowbtn" ${i[0] === "paperwork" ? "data-paper=1" : i[0] === "contact" ? "data-contact=1" : `data-tab="${i[0]}"`}><span class="main"><b>${i[1]}</b><small>${esc(i[2])}</small></span></button></li>`).join("")}</ul>` : ""}
     <div class="panel"><b>${esc(S.me.full_name || S.me.email)}</b><p class="help" style="margin-bottom:0">${esc(S.me.email)}, ${S.me.is_admin ? "Administrator" : ROLE_LABEL[S.me.role]}</p><div class="actions"><button class="ghost" id="m-refresh">Refresh</button><button class="ghost" id="m-out">Sign out</button></div></div>`;

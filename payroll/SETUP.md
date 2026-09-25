@@ -40,7 +40,7 @@ only works over HTTPS, which the site already uses.
 3. More, Workers: add each worker with their hire date, pay rate and W-4 / MI-W4 answers. The hire date matters: it drives the sick time waiting period and the employee headcount.
 4. More, Sites: add each location. Stand at the site and tap **Use my current location**, or paste coordinates from a maps app. Set the radius (150 m is a good start) and tick who works there.
 5. More, People and roles: create a hiring code for each worker and send it to them. An account can only be created with a valid code (checked by the database), so strangers cannot sign up. The first account needs no code.
-6. Each worker creates an account with their code and fills in their paperwork, contact details and guard license. Their name then shows "Ready to approve" under People and roles.
+6. Each worker creates an account with their code and fills in their paperwork, contact details and date of birth. Their name then shows "Ready to approve" under People and roles.
 7. More, Settings: check the Employer status panel, then tap **Print the policy notice** and give a copy to each worker. Workers also sign it on their phone under the Time off tab.
 
 ## Hours, sick time, attendance

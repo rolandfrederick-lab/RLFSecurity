@@ -14,11 +14,17 @@ function todoItems() {
   const missed = S.shifts.filter(s => s.status === "missed" && new Date(s.on_date) > Date.now() - 14 * 864e5).length; if (missed) items.push({ key: "op-missed", due: todayStr(), days: 0, title: `${missed} missed shift${missed === 1 ? "" : "s"}`, detail: "Log attendance or clear them on the Timesheets tab.", tab: "team", kind: "op" });
   if ((S.paperworkMissing || []).length) items.push({ key: "op-paper", due: todayStr(), days: 0, title: `${S.paperworkMissing.length} worker${S.paperworkMissing.length === 1 ? " has" : "s have"} not done tax paperwork`, detail: S.paperworkMissing.join(", ") + ". They do it on their phone under More, My tax paperwork.", tab: "workers", kind: "op" });
   const wait = S.people.filter(p => !p.active).length; if (wait) items.push({ key: "op-people", due: todayStr(), days: 0, title: `${wait} new login${wait === 1 ? "" : "s"} waiting for approval`, detail: "Approve and link under People and roles.", tab: "people", kind: "op" });
-  // new hires: Form I-9 and the Michigan new hire report
-  S.workers.forEach(w => hireSteps(w).forEach(st => { if (!st.done) add(`${st.key}-${w.id}`, st.due, `${st.key === "i9" ? "Form I-9" : "Michigan new hire report"} for ${w.name}`, st.how, "workers", "hire"); }));
-  // guard licenses expiring within 30 days, or already expired
+  // new hires: security screening before the first post, Form I-9 and the Michigan new hire report
+  S.workers.forEach(w => hireSteps(w).forEach(st => { if (!st.done) add(`${st.key}-${w.id}`, st.due, `${st.title} for ${w.name}`, st.how, "workers", "hire"); }));
+  // agency license, surety bond and insurance: 60 days ahead
+  items.push(...agencyItems().filter(i => !done[i.key]));
+  // quarterly LARA employee roster, due the 15th of the month after each quarter
+  // only the latest finished quarter, and not once it is more than 90 days past due (older quarters predate the app or were filed)
+  { const q = Math.floor(M / 3) - 1, y = q < 0 ? Y - 1 : Y, k = (q + 4) % 4, due = k === 3 ? `${Y}-01-15` : ymd(new Date(y, (k + 1) * 3, 15));
+    if (daysUntil(due) >= -90 && rosterRows(y, k).length) add(`roster-${y}-Q${k + 1}`, due, `LARA employee roster for Q${k + 1} ${y}`, "File it in MiCLEAR under your license, Additional Actions, Security Guard Quarterly Report. Workers, LARA employee roster makes the list.", "workers", "filing"); }
+  // CPLs of armed officers expiring within 30 days, or already expired
   S.people.filter(p => p.active).forEach(p => { const d = (S.staff || {})[p.id], ls = licenseState(d); if (!ls || ls.days > 30) return;
-    items.push({ key: `lic-${p.id}`, due: d.license_expires, days: ls.days, title: `${p.full_name || p.email}: guard license ${ls.expired ? "expired" : "expires soon"}`, detail: `License ${d.license_number}. Once it is renewed, enter the new expiration date on their profile under People and roles, or they update it under More, My contact and license.`, tab: "people", kind: "license" }); });
+    items.push({ key: `lic-${p.id}`, due: d.license_expires, days: ls.days, title: `${p.full_name || p.email}: CPL ${ls.expired ? "expired" : "expires soon"}`, detail: `CPL ${d.license_number}. No armed posts once it expires. When it is renewed, enter the new date on their profile under People and roles, or they update it under More, My contact details.`, tab: "people", kind: "license" }); });
   // deposits, from this year's paychecks
   if (S.year === Y) { const fed = Array(12).fill(0), mi = Array(12).fill(0), uia = [0, 0, 0, 0], futa = [0, 0, 0, 0];
     S.checks.filter(c => c.type === "W-2").forEach(c => { const m = Number(c.pay_date.slice(5, 7)) - 1; fed[m] += Number(c.fed941) || 0; mi[m] += (Number(c.state) || 0) + (Number(c.city) || 0); uia[Math.floor(m / 3)] += Number(c.suta) || 0; futa[Math.floor(m / 3)] += Number(c.futa) || 0; });
@@ -53,5 +59,5 @@ function renderTodos() {
     <button class="ghost" data-tab="${esc(i.tab)}" style="min-height:36px;padding:6px 10px">Open</button>${i.kind === "op" || i.kind === "license" ? "" : `<button class="ghost" data-done="${esc(i.key)}" style="min-height:36px;padding:6px 10px">Done</button>`}</div></li>`).join("")}</ul>`;
 }
 function wireTodos() { document.querySelectorAll("[data-done]").forEach(b => b.onclick = async () => {
-  const hs = /^(i9|nh)-(.+)$/.exec(b.dataset.done); if (hs) { const r = await sb.from("workers").update({ [hs[1] === "i9" ? "i9_done_on" : "newhire_reported_on"]: todayStr() }).eq("id", hs[2]); if (r.error) return fail(r.error); toast("Marked done"); return refresh(); }
+  const hs = /^(i9|nh|fp|app|elig)-(.+)$/.exec(b.dataset.done); if (hs) { const r = await sb.from("workers").update({ [{ i9: "i9_done_on", nh: "newhire_reported_on", fp: "fingerprint_on", app: "application_on", elig: "eligibility_on" }[hs[1]]]: todayStr() }).eq("id", hs[2]); if (r.error) return fail(r.error); toast("Marked done"); return refresh(); }
   const r = await sb.from("done_items").insert({ key: b.dataset.done, by_name: S.me.full_name || "" }); if (r.error) return fail(r.error); toast("Marked done"); refresh(); }); }
