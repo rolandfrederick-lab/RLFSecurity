@@ -331,6 +331,9 @@ p { margin: 0; }
 .leader h2 { font-size: 36px; }
 .leader .role { font-size: 16px; font-weight: 600; color: var(--gold-dark); letter-spacing: 0.04em; }
 .leader p { font-size: 17px; line-height: 1.65; color: var(--cream-muted); }
+.leader .certs ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: 16px; color: var(--cream-muted); }
+.leader .certs li::marker { color: var(--gold); }
+.stat a { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 .leader .contact-line { display: flex; gap: 32px; flex-wrap: wrap; font-size: 15px; }
 .leader .contact-line a { color: var(--cream-muted); }
 

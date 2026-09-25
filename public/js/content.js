@@ -13,6 +13,7 @@
   function each(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
 
   function apply(d) {
+    if (!d.instructorCerts && d.instructorCert) d.instructorCerts = d.instructorCert;
     window.SITE_CONTENT = d;
 
     each('[data-c]', function (el) {
@@ -22,6 +23,15 @@
       el.textContent = v;
       if (el.dataset.cLink === 'tel') el.href = 'tel:+1' + v.replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
       if (el.dataset.cLink === 'mailto') el.href = 'mailto:' + v;
+    });
+
+    // Lists kept one item per line, such as the instructor certifications.
+    each('[data-c-list]', function (el) {
+      var v = d[el.dataset.cList] || '';
+      el.innerHTML = '';
+      v.split(/\r?\n/).map(function (s) { return s.replace(/^[\s\u2022*-]+/, '').trim(); }).filter(Boolean).forEach(function (s) {
+        var li = document.createElement('li'); li.textContent = s; el.appendChild(li);
+      });
     });
 
     // Lines that only make sense when their value is set, such as the office phone.

@@ -3,8 +3,8 @@
 const WEB_TEXT = [
   ["Contact details (every page)", [["phone", "Direct phone", "313-693-5829"], ["phoneOffice", "Office phone (leave empty to hide it on the site)", "Example: 313-555-0100"], ["email", "Email address", "rolandfrederick@gmail.com"], ["serviceArea", "Service area", "Detroit and surrounding metro area"], ["hours", "Office hours", "Example: Mon to Fri, 9 am to 5 pm"]]],
   ["Home page notice", [["notice", "Short notice shown at the top of the home page (leave empty for none)", "Example: Now hiring security officers. Call to apply."]]],
-  ["Credentials", [["licenseType", "License type", "Example: Security Guard Agency"], ["licenseNumber", "State of Michigan agency license number (LARA, starts 3801)", ""], ["instructorCert", "Instructor certification", "Example: NRA Certified Pistol Instructor"], ["years", "Years in business (number)", "Example: 10"]]],
-  ["About page", [["history", "Company history", "When the company was founded, why, and the kinds of clients served since.", true], ["bio", "Owner bio", "Background, years of experience, certifications, and what led to founding the company.", true]]],
+  ["Credentials", [["licenseType", "License type", "Example: Security Guard Agency"], ["licenseNumber", "State of Michigan agency license number (LARA, starts 3801)", ""], ["years", "Years in business (number)", "Example: 10"]]],
+  ["About page", [["history", "Company history", "When the company was founded, why, and the kinds of clients served since.", true], ["bio", "Owner bio", "Background, years of experience, and what led to founding the company.", true], ["instructorCerts", "Instructor certifications, one per line (shown as a list under the bio)", "Example:\nNRA Certified Pistol Instructor\nMichigan CPL Instructor\nNRA Range Safety Officer", true]]],
   ["Training page", [["priceFundamentals", "Firearm Safety Fundamentals price", "Example: $75"], ["lengthFundamentals", "Firearm Safety Fundamentals length", "Example: 4 hours"], ["priceCpl", "Michigan CPL Class price", "Example: $120"], ["pricePrivate", "Private and family sessions price", "Example: $60 per hour"], ["priceOrg", "Organizational training price", "Example: Quote"],
     ["trainingDates", "Upcoming class dates", "Example: Oct 4 · Oct 18 · Nov 1"], ["bringPolicy", "What students bring (firearm and ammo policy)", "Example: Bring your own handgun and 100 rounds."], ["classroomAddress", "Classroom address", "Example: 123 Main St, Detroit"], ["rangeName", "Range name and city", "Example: Range name, City"]]]
 ];
@@ -19,7 +19,7 @@ const webAspect = k => k === "aboutTeam" ? 7 / 8 : k === "aboutOwner" ? 4 / 5 : 
 const webPhotoUrl = path => `${CONF.SUPABASE_URL}/storage/v1/object/public/website/${path.split("/").map(encodeURIComponent).join("/")}`;
 let WEB = null;
 
-async function loadWebsite() { const r = await sb.from("website").select("data").eq("id", 1).single(); if (r.error) throw r.error; WEB = r.data.data || {}; }
+async function loadWebsite() { const r = await sb.from("website").select("data").eq("id", 1).single(); if (r.error) throw r.error; WEB = r.data.data || {}; if (!WEB.instructorCerts && WEB.instructorCert) WEB.instructorCerts = WEB.instructorCert; }
 async function saveWebsite(data) { const r = await sb.from("website").update({ data }).eq("id", 1).select("data").single(); if (r.error) throw r.error; WEB = r.data.data || {}; }
 
 async function renderWebsite() {
