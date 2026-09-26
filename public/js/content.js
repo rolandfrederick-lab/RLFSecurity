@@ -57,7 +57,7 @@
         el.appendChild(img);
         el.classList.add('has-photo');
       }
-      img.alt = (el.dataset.photoAltKey && d[el.dataset.photoAltKey]) || el.dataset.photoAlt || '';
+      img.alt = (el.dataset.photoAltKey && d[el.dataset.photoAltKey]) || el.dataset.photoAlt || 'R L Frederick Private Security';
       img.src = photoUrl(path);
     });
   }
