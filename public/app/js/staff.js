@@ -46,6 +46,8 @@ function hcSendSheet(code) {
     composeSheet({ toName: c.note || "", subject: `Your hiring code for ${S.cfg.businessName || "R L Frederick Private Security"}`, body }); };
 }
 
+/* Every "hire someone" button leads here: People and roles, with the hiring code box ready. */
+function goHire() { go("people"); setTimeout(() => { const n = $("#hc-note"); if (n) { n.scrollIntoView({ block: "center", behavior: "smooth" }); n.focus({ preventScroll: true }); } }, 60); }
 /* Sign-up wall: 5 wrong codes locks the form on this device for 15 minutes. The real check is in the database. */
 const HC_TRIES = 5, HC_LOCK_MIN = 15;
 function hcWall() { try { return JSON.parse(localStorage.getItem("hc_wall") || "{}"); } catch (e) { return {}; } }

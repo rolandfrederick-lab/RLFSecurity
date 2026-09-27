@@ -90,7 +90,7 @@ document.addEventListener("click", e => {
 });
 ["#r-date", "#r-reg", "#r-ot", "#r-sick", "#r-guar", "#r-other", "#r-ded"].forEach(i => $(i).addEventListener("input", () => { $("#r-save").dataset.ok = ""; $("#r-save").textContent = "Save paycheck"; previewRun(); }));
 ["#r-worker", "#r-start", "#r-end"].forEach(i => $(i).addEventListener("change", pullHours));
-$("#r-save").onclick = saveRun; $("#r-addw").onclick = () => { go("workers"); workerSheet(null); }; $("#h-export").onclick = exportCsv;
+$("#r-save").onclick = saveRun; $("#r-addw").onclick = goHire; $("#h-export").onclick = exportCsv;
 $("#year").onchange = async e => { S.year = Number(e.target.value); await refresh(); };
 document.addEventListener("visibilitychange", () => { if (!document.hidden) softRefresh(); });
 window.addEventListener("focus", softRefresh);

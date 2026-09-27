@@ -3,8 +3,9 @@ const backMore = `<button class="back" data-tab="more">Back to More</button>`;
 function renderWorkers() {
   const ws = [...S.workers].sort((a, b) => (a.archived ? 1 : 0) - (b.archived ? 1 : 0) || a.name.localeCompare(b.name));
   $("#v-workers").innerHTML = `${backMore}<h2>Workers</h2>` + (ws.length ? `<ul class="list">` + ws.map(w => `<li><button class="rowbtn" data-worker="${esc(w.id)}"><span class="main"><b>${esc(w.name)}</b><small class="num">${usd(w.rate)} per hour${w.archived ? ", archived" : ""}${S.people.some(p => p.worker_id === w.id) ? "" : ", no login linked"}${notCleared(w) ? ", not cleared for posts yet" : ""}</small></span><span class="tag ${w.type === "1099" ? "c" : ""}">${esc(w.type)}</span></button></li>`).join("") + `</ul>`
-    : `<p class="empty">No workers yet. Add the first one to start running payroll.</p>`) + `<button class="primary" id="w-add">Add worker</button><div class="actions"><button class="ghost" id="w-roster">LARA employee roster</button></div>`;
-  $("#w-add").onclick = () => workerSheet(null); $("#w-roster").onclick = rosterSheet;
+    : `<p class="empty">No workers yet. Send a new hire a hiring code; once you approve them they appear here.</p>`) + `<button class="primary" id="w-hire">Hire someone</button><div class="actions"><button class="ghost" id="w-roster">LARA employee roster</button></div>
+    <p class="help">New people sign up with a hiring code and are approved under People and roles, which creates their worker record. <button class="linkbtn" id="w-add" style="padding:0">Add a worker by hand</button> only for someone who will not use the app.</p>`;
+  $("#w-hire").onclick = goHire; $("#w-add").onclick = () => workerSheet(null); $("#w-roster").onclick = rosterSheet;
 }
 function workerSheet(id) {
   const w = S.workers.find(x => x.id === id) || { type: "W-2", filing: "Single", mi_exemptions: 1, city_rate: 0 }, has = S.checks.some(c => c.worker_id === id) || S.punches.some(p => p.worker_id === id);
