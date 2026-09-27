@@ -1,0 +1,7 @@
+# Security headers for every page and file Cloudflare serves from public/.
+# upgrade-insecure-requests: the browser loads anything addressed with http:// over https:// instead,
+# so a stray http:// link (for example in text or photos added later) can never make a page show "Not secure".
+# Strict-Transport-Security: browsers always use https:// for this site, even when someone types http://.
+/*
+  Content-Security-Policy: upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000
