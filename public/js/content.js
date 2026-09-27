@@ -25,7 +25,7 @@
       if (el.dataset.cLink === 'mailto') el.href = 'mailto:' + v;
     });
 
-    // Lists kept one item per line, such as the instructor certifications.
+    // Lists kept one item per line, such as the certifications.
     each('[data-c-list]', function (el) {
       var v = d[el.dataset.cList] || '';
       el.innerHTML = '';
